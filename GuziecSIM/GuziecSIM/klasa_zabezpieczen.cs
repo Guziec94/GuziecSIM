@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.Win32;
 using System.IO;
 using System.Xml;
+using System;
+using System.Windows;
 
 namespace klasa_zabezpieczen
 {
@@ -23,24 +25,31 @@ namespace klasa_zabezpieczen
 
         public void zaladuj_z_pliku()
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            if (openFileDialog.ShowDialog() == true)
+            try
             {
-                XmlDocument doc = new XmlDocument();
-                doc.Load(openFileDialog.FileName);
-                rsa = new RSACryptoServiceProvider(512);
-                rsa.FromXmlString(doc.InnerXml);
-                RSAParameters rsapar = new RSAParameters();
-                rsapar.Modulus = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[0].InnerText);
-                rsapar.Exponent = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[1].InnerText);
-                rsapar.P = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[2].InnerText);
-                rsapar.Q = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[3].InnerText);
-                rsapar.DP = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[4].InnerText);
-                rsapar.DQ = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[5].InnerText);
-                rsapar.InverseQ = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[6].InnerText);
-                rsapar.D = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[7].InnerText);
-                klucz_prywatny = rsa.ToXmlString(true);
-                klucz_publiczny = rsa.ToXmlString(false);
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(openFileDialog.FileName);
+                    rsa = new RSACryptoServiceProvider(512);
+                    rsa.FromXmlString(doc.InnerXml);
+                    RSAParameters rsapar = new RSAParameters();
+                    rsapar.Modulus = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[0].InnerText);
+                    rsapar.Exponent = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[1].InnerText);
+                    rsapar.P = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[2].InnerText);
+                    rsapar.Q = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[3].InnerText);
+                    rsapar.DP = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[4].InnerText);
+                    rsapar.DQ = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[5].InnerText);
+                    rsapar.InverseQ = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[6].InnerText);
+                    rsapar.D = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[7].InnerText);
+                    klucz_prywatny = rsa.ToXmlString(true);
+                    klucz_publiczny = rsa.ToXmlString(false);
+                }
+            }
+            catch(Exception)
+            {
+                MessageBox.Show("Nie udało się załadować pliku z kluczem.");
             }
         }
 
