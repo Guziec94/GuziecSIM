@@ -10,7 +10,7 @@
 
     <Grid>
         <Image x:Name="image" Source="C:\Users\Matti\Source\Repos\GuziecSIM\GuziecSIM\GuziecSIM\images\guziec.png" Height="182" Margin="10,10,0,0" Width="499" RenderTransformOrigin="-0.12,0.14" Cursor="Hand" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBox" Height="22" Margin="141,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="243" HorizontalAlignment="Left" VerticalContentAlignment="Center" Background="White" BorderBrush="#FFE6E6E6" Foreground="#FF505050" TextChanged="textBox_TextChanged"/>
+        <TextBox x:Name="textBox" MaxLength="20" CommandManager.PreviewExecuted="textBox_PreviewExecuted" Height="22" Margin="141,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="243" HorizontalAlignment="Left" VerticalContentAlignment="Center" Background="White" BorderBrush="#FFE6E6E6" Foreground="#FF505050" TextChanged="textBox_TextChanged" PreviewTextInput="textBox_PreviewTextInput"/>
         <Label x:Name="label" Content="Login" HorizontalAlignment="Left" Margin="98,197,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.41,-0.308"/>
         <Label x:Name="label1" Content="Klucz" HorizontalAlignment="Left" Margin="99,228,0,0" VerticalAlignment="Top"/>
         <Button x:Name="button" Content="Znajdź plik" HorizontalAlignment="Left" Margin="142,231,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="0.48,1.15" Background="White" BorderBrush="#FFE6E6E6" Foreground="#FF505050" Height="22" Click="button_Click"/>

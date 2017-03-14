@@ -55,12 +55,44 @@ namespace GuziecSIM
             else textBox.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)242, (byte)202, (byte)202));
         }
 
+        /* [PRZEKIEROWANIE DO STRONY REJESTRACJI] */
         private void label3_MouseDown(object sender, MouseButtonEventArgs e)
         {  
             Rejestracja rejestracja = new Rejestracja();
 
             NavigationService nav = NavigationService.GetNavigationService(this);
             nav.Navigate(rejestracja);
+        }
+
+        /* [REGUŁY SPRAWDZAJĄCE CZY WPROWADZANE DANE TEKSTOWE SĄ DOZWOLONE] */
+        private bool dozwolone(string text, bool cyfry = false)
+        {
+            string z = "żŻóÓłŁćĆęĘśŚąĄźŹńŃ ";
+            string c = "0123456789";
+
+            return !cyfry ? !(z.Contains(text) || znakiSpecjalne(text)) : !(z.Contains(text) || c.Contains(text) || znakiSpecjalne(text));
+        }
+        private bool znakiSpecjalne(string text)
+        {
+            string s = "!@#$%^&*()_-+={[}]|\\:;\"'<,>.?/";
+            return s.Contains(text);
+        }
+
+        /* [ZABLOKOWANIE MOŻLIWOŚCI WKLEJANIA DANYCH DO POLA LOGINU] */
+        private void textBox_PreviewExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Command == ApplicationCommands.Copy ||
+                e.Command == ApplicationCommands.Cut ||
+                e.Command == ApplicationCommands.Paste)
+            {
+                e.Handled = true;
+            }
+        }
+
+        /* [SPRAWDZANIE POPRAWNOŚCI WPROWADZANYCH ZNAKOW W POLU LOGINU] */
+        private void textBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if ((!dozwolone(e.Text, true) && textBox.Text.Length == 0) || (!dozwolone(e.Text, true) && textBox.SelectedText == textBox.Text) || znakiSpecjalne(e.Text)) e.Handled = true;
         }
     }
 }
