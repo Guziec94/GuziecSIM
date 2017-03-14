@@ -12,20 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using klasa_zabezpieczen;
-using Microsoft.Win32;
-using System.IO;
 
 namespace GuziecSIM
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Logika interakcji dla klasy Rejestracja.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class Rejestracja : Page
     {
-        public MainWindow()
+        public Rejestracja()
         {
             InitializeComponent();
-        }     
+        }
     }
 }

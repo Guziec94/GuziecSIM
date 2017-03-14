@@ -6,15 +6,5 @@
         xmlns:local="clr-namespace:GuziecSIM"
         mc:Ignorable="d"
         Title="GuziecSIM" Height="380" Width="525" ResizeMode="CanMinimize">
-    <Grid>
-        <Image x:Name="image" Source="pack://application:,,,/images/guziec.png" Height="182" Margin="10,10,0,0" Width="499" RenderTransformOrigin="-0.12,0.14" Cursor="Hand" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBox" Height="22" Margin="141,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="243" HorizontalAlignment="Left" VerticalContentAlignment="Center" Background="White" BorderBrush="#FFE6E6E6" Foreground="#FF505050" TextChanged="textBox_TextChanged"/>
-        <Label x:Name="label" Content="Login" HorizontalAlignment="Left" Margin="98,197,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.41,-0.308"/>
-        <Label x:Name="label1" Content="Klucz" HorizontalAlignment="Left" Margin="99,228,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="button" Content="Znajdź plik" HorizontalAlignment="Left" Margin="142,231,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="0.48,1.15" Background="White" BorderBrush="#FFE6E6E6" Foreground="#FF505050" Height="22" Click="button_Click"/>
-        <Button x:Name="button1" Content="Zaloguj" HorizontalAlignment="Left" Margin="141,265,0,0" VerticalAlignment="Top" Width="242" Foreground="White" Background="#FF5CB85A" BorderThickness="0" Height="36" BorderBrush="#FFE6E6E6" Click="button1_Click"/>
-        <Label x:Name="label2" Content="nie wybrano .." HorizontalAlignment="Left" Margin="222,228,0,0" VerticalAlignment="Top" Foreground="#FF505050"/>
-        <Label x:Name="label3" Content="Utwórz konto" HorizontalAlignment="Left" Margin="141,306,0,0" VerticalAlignment="Top" FontSize="11" Foreground="#FF506CE4" RenderTransformOrigin="0.329,1.08" MouseDoubleClick="label3_MouseDown"/>
-
-    </Grid>
+    <Frame Source="Logowanie.xaml" NavigationUIVisibility="Hidden"/>
 </Window>
