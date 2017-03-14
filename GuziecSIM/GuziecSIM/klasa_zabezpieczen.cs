@@ -53,14 +53,19 @@ namespace klasa_zabezpieczen
             }
         }
 
-        public void zapisz_do_pliku()
+        public bool zapisz_do_pliku(string login = null)
         {
             var dialog = new SaveFileDialog();
             dialog.Filter = "Plik XML(.xml)|*.xml|Wszystkie pliki(*.*)|*.*";
-            dialog.FileName = "klucz prywatny.xml";
+            dialog.FileName = login == null ? "klucz prywatny.xml" : "klucz uzytkownika " + login + ".xml";
             if (dialog.ShowDialog() == true)
             {
                 File.WriteAllText(dialog.FileName, klucz_prywatny);
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
     }
