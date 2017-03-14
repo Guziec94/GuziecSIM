@@ -8,6 +8,7 @@ namespace baza_danych_azure
     public class baza_danych
     {
         public static SqlConnection cnn;
+
         public static void polacz_z_baza()
         {
             string connetionString = "Data Source=tcp:LENOVOY510P;Initial Catalog = GuziecSIMDB; User ID = Guziec94; Password=P@ssw0rd";
@@ -34,7 +35,7 @@ namespace baza_danych_azure
             }
         }
 
-        public static void sprawdzDaneLogowania(string login, klucze key)
+        public static void zaloguj(string login, klucze key)
         {
             string hashKlucza = key.klucz_prywatny.hashuj();
             string queryResult = null;
@@ -66,7 +67,8 @@ namespace baza_danych_azure
                     MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
                 }
         }
-        public static void zarejestruj_uzytkownika(string login, string imie, string opis)
+
+        public static bool zarejestruj_uzytkownika(string login, string imie, string opis)
         {
             klucze nowy_klucz = new klucze();
             nowy_klucz.generuj_klucze();
@@ -82,23 +84,27 @@ namespace baza_danych_azure
             {
                 executeQuery.ExecuteNonQuery();
                 MessageBox.Show("Zapisz plik przechowujący klucz w bezpiecznym miejscu. Będziesz używać go do logowania.");
-                if(nowy_klucz.zapisz_do_pliku(login)==false)
+                if (nowy_klucz.zapisz_do_pliku(login) == false)
                 {
                     query = "delete from uzytkownicy where login = @login";
                     executeQuery = new SqlCommand(query, cnn);
                     executeQuery.Parameters.AddWithValue("login", login);
                     executeQuery.ExecuteNonQuery();
+                    return false;
                 }
                 else
                 {
                     MessageBox.Show("Konto zostało utworzone poprawnie. Możesz teraz się zalogować.");
+                    return true;
                 }
             }
-            catch(Exception)
+            catch (Exception)
             {
                 MessageBox.Show("Wystąpił nieoczekiwany błąd! Użytkownik nie został utworzony, spróbuj ponownie.");
+                return false;
             }
         }
+
         public static bool czyLoginIstnieje(string login)
         {
             string queryResult = null;

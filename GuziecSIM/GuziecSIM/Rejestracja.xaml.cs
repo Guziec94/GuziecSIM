@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using baza_danych_azure;
 
 namespace GuziecSIM
 {
@@ -55,7 +46,13 @@ namespace GuziecSIM
                 {
                     if (!string.IsNullOrEmpty(_opis))
                     {
-                        MessageBox.Show("... Rozpoczynamy proces rejestracji");
+                        if (baza_danych.zarejestruj_uzytkownika(textBox.Text, textBox1.Text, textBox2.Text))
+                        {
+                            Logowanie logowanie = new Logowanie();
+
+                            NavigationService nav = NavigationService.GetNavigationService(this);
+                            nav.Navigate(logowanie);
+                        }
                     }
                     else textBox2.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)242, (byte)202, (byte)202));
                 }
