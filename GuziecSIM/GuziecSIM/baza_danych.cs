@@ -99,5 +99,36 @@ namespace baza_danych_azure
                 MessageBox.Show("Wystąpił nieoczekiwany błąd! Użytkownik nie został utworzony, spróbuj ponownie.");
             }
         }
+        public static bool czyLoginIstnieje(string login)
+        {
+            string queryResult = null;
+            string query = "select login from uzytkownicy where login = @login";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            queryResult = readerQuery.GetString(0);
+                        }
+                        if (queryResult != null)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                    return true;
+                }
+        }
     }
 }

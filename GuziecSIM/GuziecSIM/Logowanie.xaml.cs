@@ -30,6 +30,11 @@ namespace GuziecSIM
         private void button_Click(object sender, RoutedEventArgs e)
         {
             _klucz.zaladuj_z_pliku();
+            string fragmentKlucza = _klucz.klucz_prywatny;
+            if (fragmentKlucza != null && fragmentKlucza.Length > 45)
+            {
+                label2.Content = fragmentKlucza.Substring(22, 23) + "...";
+            }
         }
 
         /* [WYKRYTO WPROWADZANIE ZMIAN W POLU LOGINU] */
