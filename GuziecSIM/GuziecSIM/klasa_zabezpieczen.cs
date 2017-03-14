@@ -1,6 +1,9 @@
 ﻿using System.Text;
 using System.Security.Cryptography;
 using System.Linq;
+using Microsoft.Win32;
+using System.IO;
+using System.Xml;
 
 namespace klasa_zabezpieczen
 {
@@ -15,6 +18,41 @@ namespace klasa_zabezpieczen
             rsa = new RSACryptoServiceProvider(512);
             klucz_prywatny = rsa.ToXmlString(true);
             klucz_publiczny = rsa.ToXmlString(false);
+            RSAParameters rsapar = rsa.ExportParameters(true);
+        }
+
+        public void zaladuj_z_pliku()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(openFileDialog.FileName);
+                rsa = new RSACryptoServiceProvider(512);
+                rsa.FromXmlString(doc.InnerXml);
+                RSAParameters rsapar = new RSAParameters();
+                rsapar.Modulus = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[0].InnerText);
+                rsapar.Exponent = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[1].InnerText);
+                rsapar.P = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[2].InnerText);
+                rsapar.Q = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[3].InnerText);
+                rsapar.DP = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[4].InnerText);
+                rsapar.DQ = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[5].InnerText);
+                rsapar.InverseQ = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[6].InnerText);
+                rsapar.D = Encoding.Default.GetBytes(doc.DocumentElement.ChildNodes[7].InnerText);
+                klucz_prywatny = rsa.ToXmlString(true);
+                klucz_publiczny = rsa.ToXmlString(false);
+            }
+        }
+
+        public void zapisz_do_pliku()
+        {
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "Plik XML(.xml)|*.xml|Wszystkie pliki(*.*)|*.*";
+            dialog.FileName = "klucz prywatny.xml";
+            if (dialog.ShowDialog() == true)
+            {
+                File.WriteAllText(dialog.FileName, klucz_prywatny);
+            }
         }
     }
 
@@ -58,7 +96,7 @@ namespace klasa_zabezpieczen
             rsa.FromXmlString(klucz_publiczny);
             var dataToEncrypt = _encoder.GetBytes(dane);
             var encryptedByteArray = rsa.Encrypt(dataToEncrypt, false).ToArray();
-            
+
             /*var length = encryptedByteArray.Count();
             var item = 0;
             var sb = new StringBuilder();
