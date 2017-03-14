@@ -1,19 +1,12 @@
-﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using System.Data.SqlClient;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using klasa_zabezpieczen;
+using baza_danych_azure;
 
 namespace GuziecSIM
 {
@@ -23,7 +16,7 @@ namespace GuziecSIM
     public partial class Logowanie : Page
     {
         private string _login;
-        private string _klucz;
+        klucze _klucz = new klucze();
 
         public Logowanie()
         {
@@ -36,19 +29,7 @@ namespace GuziecSIM
         /* [WCZYTYWANIE PLIKU Z KLUCZEM PRYWATNYM DO ZALOGOWANIA] */
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-
-            openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-            openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                label2.Content = openFileDialog.SafeFileName;
-                button.Content = "Zmień";
-
-                _klucz = File.ReadAllText(openFileDialog.FileName);
-                button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
-            }
+            _klucz.zaladuj_z_pliku();
         }
 
         /* [WYKRYTO WPROWADZANIE ZMIAN W POLU LOGINU] */
@@ -63,9 +44,11 @@ namespace GuziecSIM
         {
             if (!string.IsNullOrEmpty(_login))
             {
-                if (!string.IsNullOrEmpty(_klucz))
+                if (!string.IsNullOrEmpty(_klucz.klucz_prywatny))
                 {
                     MessageBox.Show("... Rozpoczynamy proces logowania");
+                    baza_danych.polacz_z_baza();
+                    baza_danych.sprawdzDaneLogowania(_login, _klucz);
                 }
                 else button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)242, (byte)202, (byte)202));
             }
