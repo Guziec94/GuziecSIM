@@ -24,6 +24,7 @@ namespace GuziecSIM
 
             label.ToolTip = "np. Guziec94";
             label1.ToolTip = "Klucz prywatny przypisany do konta";
+            baza_danych.polacz_z_baza();
         }
 
         /* [WCZYTYWANIE PLIKU Z KLUCZEM PRYWATNYM DO ZALOGOWANIA] */
@@ -51,7 +52,6 @@ namespace GuziecSIM
             {
                 if (!string.IsNullOrEmpty(_klucz.klucz_prywatny))
                 {
-                    baza_danych.polacz_z_baza();
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
                         MessageBox.Show("Sukces!");

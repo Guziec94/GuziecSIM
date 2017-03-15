@@ -98,9 +98,33 @@ namespace baza_danych_azure
                     return true;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show("Wystąpił nieoczekiwany błąd! Użytkownik nie został utworzony, spróbuj ponownie.");
+                MessageBox.Show("Wystąpił nieoczekiwany błąd! Użytkownik nie został utworzony, spróbuj ponownie."+ex.Message);
+                return false;
+            }
+        }
+
+        public static bool usun_konto(string login, klucze klucz)
+        {
+            if (sprawdz_dane(login, klucz))
+            {
+                try
+                {
+                    string query = "delete from uzytkownicy where login = @login";
+                    SqlCommand executeQuery = new SqlCommand(query, cnn);
+                    executeQuery.Parameters.AddWithValue("login", login);
+                    executeQuery.ExecuteNonQuery();
+                    return true;
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
+                    return false;
+                }
+            }
+            else
+            {
                 return false;
             }
         }
