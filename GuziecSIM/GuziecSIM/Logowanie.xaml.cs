@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using klasa_zabezpieczen;
 using baza_danych_azure;
+using System.Collections.Generic;
 
 namespace GuziecSIM
 {
@@ -55,6 +56,15 @@ namespace GuziecSIM
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
                         MessageBox.Show("Sukces!");
+                        List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login);
+                        if (wiadomosci != null)
+                        {
+                            foreach(string w in wiadomosci)
+                            {
+                                MessageBox.Show(w);
+                            }
+                            baza_danych.usunKrotkieWiadomosci(_login);
+                        }
                     }
                     else
                     {

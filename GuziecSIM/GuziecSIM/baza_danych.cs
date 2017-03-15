@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Windows;
 using klasa_zabezpieczen;
+using System.Collections.Generic;
 
 namespace baza_danych_azure
 {
@@ -159,6 +160,53 @@ namespace baza_danych_azure
                     MessageBox.Show("Wystąpił nieoczekiwany błąd!");
                     return true;
                 }
+        }
+
+        public static List<string> sprawdzKrotkieWiadomosci(string login)
+        {
+            List<string> wiadomosci = new List<string>();
+            string query = "select login_wysylajacego, tresc from krotkie_wiadomosci where login_odbiorcy = @login";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        while (readerQuery.Read())
+                        {
+                            wiadomosci.Add(readerQuery.GetString(0) + ": " + readerQuery.GetString(1));
+                        }
+                        if (wiadomosci.Count > 0)
+                        {
+                            return wiadomosci;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                    return null;
+                }
+        }
+
+        public static void usunKrotkieWiadomosci(string login)
+        {
+            try
+            { 
+                string query = "delete from krotkie_wiadomosci where login_odbiorcy=@login";
+                SqlCommand executeQuery = new SqlCommand(query, cnn);
+                executeQuery.Parameters.AddWithValue("login", login);
+                executeQuery.ExecuteNonQuery();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
+            }
         }
     }
 }
