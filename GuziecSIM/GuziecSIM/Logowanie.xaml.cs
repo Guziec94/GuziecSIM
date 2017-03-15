@@ -8,6 +8,7 @@ using System.Windows.Navigation;
 using klasa_zabezpieczen;
 using baza_danych_azure;
 using System.Collections.Generic;
+using System.Net;
 
 namespace GuziecSIM
 {
@@ -16,7 +17,7 @@ namespace GuziecSIM
     /// </summary>
     public partial class Logowanie : Page
     {
-        private string _login;
+        public static string _login;
         klucze _klucz = new klucze();
 
         public Logowanie()
@@ -55,8 +56,11 @@ namespace GuziecSIM
                 {
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
+                        string externalIP = new WebClient().DownloadString("http://icanhazip.com");
+                        baza_danych.wprowadzAresIP(_login, externalIP);
                         MessageBox.Show("Sukces!");
                         List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login,_klucz);
+                        baza_danych.usunDane(_login);
                         if (wiadomosci != null)
                         {
                             foreach(string w in wiadomosci)

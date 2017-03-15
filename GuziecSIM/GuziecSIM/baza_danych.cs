@@ -224,5 +224,51 @@ namespace baza_danych_azure
             executeQuery.Parameters.AddWithValue("termin_waznosci", termin_waznosci);
             executeQuery.ExecuteNonQuery();
         }
+
+        public static void wprowadzAresIP(string login, string externalIP)
+        {
+            string queryResult = null;
+            string query = "SELECT login FROM dostepni_uzytkownicy WHERE login = @login";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            queryResult = readerQuery.GetString(0);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
+                }
+
+            if (queryResult == null)
+            {
+                query = "INSERT INTO dostepni_uzytkownicy VALUES(@login,@externalIP,@data)";
+            }
+            else
+            {
+                query = "UPDATE dostepni_uzytkownicy SET ostatnio_online = @data, adres_ip = @externalIP WHERE login = @login";
+            }
+            executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            executeQuery.Parameters.AddWithValue("data", DateTime.Now);
+            executeQuery.Parameters.AddWithValue("externalIP", externalIP);
+            executeQuery.ExecuteNonQuery();
+        }
+
+        public static void usunDane (string login)
+        {
+            string query = "DELETE FROM dostepni_uzytkownicy WHERE login=@login";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            executeQuery.ExecuteNonQuery();
+        }
     }
 }
