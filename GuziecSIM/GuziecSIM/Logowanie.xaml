@@ -9,7 +9,7 @@
       Title="Logowanie">
 
     <Grid>
-        <Image x:Name="image" Source="pack://application:,,,/guziec.png" Height="182" Margin="10,10,0,0" Width="499" RenderTransformOrigin="-0.12,0.14" Cursor="Hand" VerticalAlignment="Top"/>
+        <Image x:Name="image" Source="pack://application:,,,/guziec.png" Height="182" Margin="10,10,0,0" Width="499" RenderTransformOrigin="-0.12,0.14" VerticalAlignment="Top"/>
         <TextBox x:Name="textBox" MaxLength="20" CommandManager.PreviewExecuted="textBox_PreviewExecuted" Height="22" Margin="141,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="243" HorizontalAlignment="Left" VerticalContentAlignment="Center" Background="White" BorderBrush="#FFE6E6E6" Foreground="#FF505050" TextChanged="textBox_TextChanged" PreviewTextInput="textBox_PreviewTextInput"/>
         <Label x:Name="label" Content="Login" HorizontalAlignment="Left" Margin="98,197,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.41,-0.308"/>
         <Label x:Name="label1" Content="Klucz" HorizontalAlignment="Left" Margin="99,228,0,0" VerticalAlignment="Top"/>

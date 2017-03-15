@@ -3,6 +3,8 @@ using System.Data.SqlClient;
 using System.Windows;
 using klasa_zabezpieczen;
 using System.Collections.Generic;
+using GuziecSIM;
+using System.Xml;
 
 namespace baza_danych_azure
 {
@@ -269,6 +271,48 @@ namespace baza_danych_azure
             executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             executeQuery.ExecuteNonQuery();
+        }
+
+        public static List<Uzytkownik> pobierz_liste_kontaktow(string login)
+        {
+            string queryResult = null;
+            XmlDocument lista_kontaktow = new XmlDocument();
+            string query = "select * from lista_kontakow where login=@login";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            queryResult = readerQuery.GetString(1);
+                        }
+                        if (queryResult != null)
+                        {
+                            lista_kontaktow.LoadXml(queryResult);
+                            List<Uzytkownik> lista_uzytkownikow = new List<Uzytkownik>();
+                            foreach (XmlNode node in lista_kontaktow)
+                            {
+                                foreach (XmlNode childnode in node)
+                                {
+                                    lista_uzytkownikow.Add(new Uzytkownik(childnode.FirstChild.InnerText, childnode.LastChild.InnerXml));
+                                }
+                            }
+                            return lista_uzytkownikow;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                    return null;
+                }
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Data.SqlClient;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -23,7 +21,6 @@ namespace GuziecSIM
         public Logowanie()
         {
             InitializeComponent();
-
             label.ToolTip = "np. Guziec94";
             label1.ToolTip = "Klucz prywatny przypisany do konta";
             baza_danych.polacz_z_baza();
