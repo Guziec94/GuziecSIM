@@ -72,7 +72,7 @@ namespace klasa_zabezpieczen
 
     public static class klasa_rozszerzen
     {
-        public static UnicodeEncoding _encoder = new UnicodeEncoding();
+        public static UTF8Encoding _encoder = new UTF8Encoding();
 
         public static string hashuj(this string dane)//"tekst do zahashowania".hashuj();
         {
@@ -90,15 +90,7 @@ namespace klasa_zabezpieczen
         public static string deszyfruj(this string dane, string klucz_prywatny)//"tekst do zdeszyfrowania".deszyfruj(klucz_publiczny);
         {
             var rsa = new RSACryptoServiceProvider();
-
-            /*var dataArray = data.Split(new char[] { ',' });
-            byte[] dataByte = new byte[dataArray.Length];
-            for (int i = 0; i < dataArray.Length; i++)
-            {
-                dataByte[i] = Convert.ToByte(dataArray[i]);
-            }*/
-
-            byte[] daneBajtowo = System.Text.Encoding.Default.GetBytes(dane);//praca na ascii
+            byte[] daneBajtowo = Encoding.Default.GetBytes(dane);//praca na ascii
             rsa.FromXmlString(klucz_prywatny);
             var odszyfrowaneBajty = rsa.Decrypt(daneBajtowo, false);
             return _encoder.GetString(odszyfrowaneBajty);
@@ -110,21 +102,7 @@ namespace klasa_zabezpieczen
             rsa.FromXmlString(klucz_publiczny);
             var dataToEncrypt = _encoder.GetBytes(dane);
             var encryptedByteArray = rsa.Encrypt(dataToEncrypt, false).ToArray();
-
-            /*var length = encryptedByteArray.Count();
-            var item = 0;
-            var sb = new StringBuilder();
-            foreach (var x in encryptedByteArray)
-            {
-                item++;
-                sb.Append(x);
-
-                if (item < length)
-                    sb.Append(",");
-            }
-            szyfrowany.Text = sb.ToString();*/
-
-            return System.Text.Encoding.Default.GetString(encryptedByteArray);//praca na ascii
+            return Encoding.Default.GetString(encryptedByteArray);//praca na ascii
         }
     }
 }

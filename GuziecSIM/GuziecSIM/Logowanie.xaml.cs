@@ -56,7 +56,7 @@ namespace GuziecSIM
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
                         MessageBox.Show("Sukces!");
-                        List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login);
+                        List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login,_klucz);
                         if (wiadomosci != null)
                         {
                             foreach(string w in wiadomosci)
