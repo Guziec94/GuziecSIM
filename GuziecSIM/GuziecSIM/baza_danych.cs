@@ -35,7 +35,7 @@ namespace baza_danych_azure
             }
         }
 
-        public static void zaloguj(string login, klucze key)
+        public static bool sprawdz_dane(string login, klucze key)
         {
             string hashKlucza = key.klucz_prywatny.hashuj();
             string queryResult = null;
@@ -52,19 +52,19 @@ namespace baza_danych_azure
                             queryResult = readerQuery.GetString(0);
                         }
                     }
-
                     if (!hashKlucza.Equals(queryResult))
                     {
-                        MessageBox.Show("Błąd logowania. Sprawdź dane!");
+                        return false;
                     }
                     else
-                    {
-                        MessageBox.Show("Sukces!");
+                    {   
+                        return true;
                     }
                 }
                 catch (Exception)
                 {
                     MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
+                    return false;
                 }
         }
 

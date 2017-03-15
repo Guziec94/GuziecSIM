@@ -52,7 +52,14 @@ namespace GuziecSIM
                 if (!string.IsNullOrEmpty(_klucz.klucz_prywatny))
                 {
                     baza_danych.polacz_z_baza();
-                    baza_danych.zaloguj(_login, _klucz);
+                    if (baza_danych.sprawdz_dane(_login, _klucz))
+                    {
+                        MessageBox.Show("Sukces!");
+                    }
+                    else
+                    {
+                        MessageBox.Show("Błąd logowania. Sprawdź dane!");
+                    }
                 }
                 else button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)242, (byte)202, (byte)202));
             }

@@ -20,6 +20,6 @@
         <Label x:Name="label" Content="Login" HorizontalAlignment="Left" Margin="20,31,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <Label x:Name="label1" Content="Imię" HorizontalAlignment="Left" Margin="20,62,0,0" VerticalAlignment="Top" Grid.Column="1"/>
         <Label x:Name="label2" Content="Opis" HorizontalAlignment="Left" Margin="20,93,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <Label x:Name="label3" Content="Wróć do strony logowania" HorizontalAlignment="Left" Margin="63,306,0,0" VerticalAlignment="Top" FontSize="11" Foreground="#FF506CE4" RenderTransformOrigin="0.329,1.08" MouseDoubleClick="label3_MouseDoubleClick" Grid.Column="1"/>
+        <Label x:Name="label3" Content="Wróć do strony logowania" HorizontalAlignment="Left" Margin="63,306,0,0" VerticalAlignment="Top" FontSize="11" Foreground="#FF506CE4" RenderTransformOrigin="0.329,1.08" PreviewMouseDown="label3_MouseDoubleClick" Grid.Column="1"/>
     </Grid>
 </Page>
