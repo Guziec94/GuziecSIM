@@ -5,6 +5,8 @@ using klasa_zabezpieczen;
 using System.Collections.Generic;
 using GuziecSIM;
 using System.Xml;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace baza_danych_azure
 {
@@ -60,7 +62,7 @@ namespace baza_danych_azure
                         return false;
                     }
                     else
-                    {   
+                    {
                         return true;
                     }
                 }
@@ -76,7 +78,7 @@ namespace baza_danych_azure
             klucze nowy_klucz = new klucze();
             nowy_klucz.generuj_klucze();
 
-            string query = "INSERT INTO uzytkownicy (login,klucz_publiczny,skrot_klucz_prywatny,imie,opis) VALUES(@login, @klucz_publiczny, @skrot_klucz_prywatny, @imie, @opis)";
+            string query = "INSERT INTO uzytkownicy (login,klucz_publiczny,skrot_klucz_prywatny,imie,opis) VALUES(@login, @klucz_publiczny, @skrot_klucz_prywatny, @imie, @opis);insert into lista_kontaktow values (@login, '<lista_kontaktow></lista_kontaktow>')";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             executeQuery.Parameters.AddWithValue("imie", imie);
@@ -89,10 +91,8 @@ namespace baza_danych_azure
                 MessageBox.Show("Zapisz plik przechowujący klucz w bezpiecznym miejscu. Będziesz używać go do logowania.");
                 if (nowy_klucz.zapisz_do_pliku(login) == false)
                 {
-                    query = "delete from uzytkownicy where login = @login";
-                    executeQuery = new SqlCommand(query, cnn);
-                    executeQuery.Parameters.AddWithValue("login", login);
-                    executeQuery.ExecuteNonQuery();
+                    usun_konto(login, nowy_klucz);
+                    MessageBox.Show("Konto nie zostało utworzone (nie zapisano klucza).");
                     return false;
                 }
                 else
@@ -114,10 +114,11 @@ namespace baza_danych_azure
             {
                 try
                 {
-                    string query = "delete from uzytkownicy where login = @login";
+                    string query = "delete from uzytkownicy where login = @login;delete from lista_kontaktow where login=@login;delete from krotkie_wiadomosci where login_odbiorcy = @login or login_wysylajacego = @login";
                     SqlCommand executeQuery = new SqlCommand(query, cnn);
                     executeQuery.Parameters.AddWithValue("login", login);
                     executeQuery.ExecuteNonQuery();
+                    usunDane(login);
                     return true;
                 }
                 catch (Exception)
@@ -199,7 +200,7 @@ namespace baza_danych_azure
         public static void usunKrotkieWiadomosci(string login)
         {
             try
-            { 
+            {
                 string query = "delete from krotkie_wiadomosci where login_odbiorcy=@login";
                 SqlCommand executeQuery = new SqlCommand(query, cnn);
                 executeQuery.Parameters.AddWithValue("login", login);
@@ -227,7 +228,7 @@ namespace baza_danych_azure
             executeQuery.ExecuteNonQuery();
         }
 
-        public static void wprowadzAresIP(string login, string externalIP)
+        public static void wprowadzAdresIP(string login, string externalIP)
         {
             string queryResult = null;
             string query = "SELECT login FROM dostepni_uzytkownicy WHERE login = @login";
@@ -277,7 +278,7 @@ namespace baza_danych_azure
         {
             string queryResult = null;
             XmlDocument lista_kontaktow = new XmlDocument();
-            string query = "select * from lista_kontakow where login=@login";
+            string query = "select * from lista_kontaktow where login=@login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             using (executeQuery)
@@ -313,6 +314,19 @@ namespace baza_danych_azure
                     MessageBox.Show("Wystąpił nieoczekiwany błąd!");
                     return null;
                 }
+        }
+
+        public static void lista_kontaktow_do_xml(List<Uzytkownik> lista_kontaktow, string login)
+        {
+            XmlDocument temp = new XmlDocument();
+            var xml = new XElement("Lista_kontaktow", lista_kontaktow.Select
+                (x => new XElement("kontakt", new XElement("login", x.login), new XElement("klucz_publiczny", XElement.Parse(x.kluczPub)))));
+
+            string query = "UPDATE lista_kontaktow SET kontakty = @kontakty WHERE login=@login";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            executeQuery.Parameters.AddWithValue("kontakty", xml.ToString());
+            executeQuery.ExecuteNonQuery();
         }
     }
 }
