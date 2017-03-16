@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GuziecSIM
 {
@@ -13,5 +9,16 @@ namespace GuziecSIM
 
         public DateTime czas;
         public string Text;
+        public Wiadomosc(string nadawca, string odbiorca, DateTime czas, string Text)
+        {
+            this.nadawca = nadawca;
+            this.odbiorca = odbiorca;
+            this.czas = czas;
+            this.Text = Text;
+        }
+
+        public Wiadomosc()
+        {
+        }
     }
 }

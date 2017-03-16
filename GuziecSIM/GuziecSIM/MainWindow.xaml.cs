@@ -26,6 +26,14 @@ namespace GuziecSIM
         public MainWindow()
         {
             InitializeComponent();
-        }     
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if(Logowanie._login != null)
+            {
+                baza_danych_azure.baza_danych.usunAdresIP(Logowanie._login);
+            }
+        }
     }
 }

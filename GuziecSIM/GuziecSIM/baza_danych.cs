@@ -165,10 +165,10 @@ namespace baza_danych_azure
                 }
         }
 
-        public static List<string> sprawdzKrotkieWiadomosci(string login, klucze klucz_odbierajacego)
+        public static List<Wiadomosc> sprawdzKrotkieWiadomosci(string login, klucze klucz_odbierajacego)
         {
-            List<string> wiadomosci = new List<string>();
-            string query = "select login_wysylajacego, tresc from krotkie_wiadomosci where login_odbiorcy = @login";
+            List<Wiadomosc> wiadomosci = new List<Wiadomosc>();
+            string query = "select login_wysylajacego, tresc, czas_wyslania from krotkie_wiadomosci where login_odbiorcy = @login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             using (executeQuery)
@@ -178,7 +178,8 @@ namespace baza_danych_azure
                     {
                         while (readerQuery.Read())
                         {
-                            wiadomosci.Add(readerQuery.GetString(0) + ": " + readerQuery.GetString(1).deszyfruj(klucz_odbierajacego.klucz_prywatny));
+                            var czas = DateTime.Now;
+                            wiadomosci.Add(new Wiadomosc(readerQuery.GetString(0), login, readerQuery.GetDateTime(2), readerQuery.GetString(1).deszyfruj(klucz_odbierajacego.klucz_prywatny)));
                         }
                         if (wiadomosci.Count > 0)
                         {
@@ -219,12 +220,13 @@ namespace baza_danych_azure
                 termin_waznosci = DateTime.Now.AddDays(3);
             }
 
-            string query = "INSERT INTO krotkie_wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci)";
+            string query = "INSERT INTO krotkie_wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci,czas_wyslania) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci,@czas_wyslania)";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login_wysylajacego", login_wysylajacego);
             executeQuery.Parameters.AddWithValue("login_odbiorcy", login_odbiorcy);
             executeQuery.Parameters.AddWithValue("tresc", klasa_rozszerzen.szyfruj(tresc, klucz_publiczny));//szyfrowanie wiadomosci kluczem publicznym odbiorcy wiadomosci
             executeQuery.Parameters.AddWithValue("termin_waznosci", termin_waznosci);
+            executeQuery.Parameters.AddWithValue("czas_wyslania", DateTime.Now);
             executeQuery.ExecuteNonQuery();
         }
 
@@ -301,7 +303,14 @@ namespace baza_danych_azure
                                     lista_uzytkownikow.Add(new Uzytkownik(childnode.FirstChild.InnerText, childnode.FirstChild.NextSibling.InnerXml, childnode.FirstChild.NextSibling.NextSibling.InnerText, childnode.LastChild.InnerText));
                                 }
                             }
-                            return lista_uzytkownikow;
+                            if (lista_uzytkownikow.Count > 0)
+                            {
+                                return lista_uzytkownikow;
+                            }
+                            else
+                            {
+                                return null;
+                            }
                         }
                         else
                         {

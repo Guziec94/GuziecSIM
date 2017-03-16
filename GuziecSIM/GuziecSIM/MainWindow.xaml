@@ -5,6 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GuziecSIM"
         mc:Ignorable="d"
-        Title="GuziecSIM" Height="380" Width="548" ResizeMode="CanMinimize">
+        Title="GuziecSIM" Height="380" Width="548" ResizeMode="CanMinimize" Closing="Window_Closing">
     <Frame Source="Logowanie.xaml" NavigationUIVisibility="Hidden"/>
 </Window>

@@ -42,18 +42,24 @@ namespace GuziecSIM
             btnDod.ToolTip = "Dodaj kontakt";
 
             lista = baza_danych.pobierz_liste_kontaktow(_login);
-            if(lista.Count>0)
+            if(lista != null)
             {
                 pokazListeKontaktow(lista);
             }
-            List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
+            List<Wiadomosc> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
             if (wiadomosci != null)
             {
-                foreach (string w in wiadomosci)
+                foreach (Wiadomosc w in wiadomosci)
                 {
-                    MessageBox.Show(w);
+                    archiwum.Add(w);
+                    foreach (var kontakt in kontakty.Items)
+                    {
+                        TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                        if (login.Text == w.nadawca) { login.Foreground = Brushes.Red; break; }
+                    }
                 }
                 baza_danych.usunKrotkieWiadomosci(_login);
+                MessageBox.Show("Masz nieodczytane wiadomosci!");
             }
         }
 
@@ -116,7 +122,7 @@ namespace GuziecSIM
         /* [OTWARCIE OKNA KONWERSACJI Z INNYM UŻYTKOWNIKIEM] */
         private void Group_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            nowa = new Wiadomosc { nadawca = _login, odbiorca = ((GroupBox)sender).Name };
+            nowa = new Wiadomosc() { nadawca = _login, odbiorca = ((GroupBox)sender).Name };
 
             okno.Items.Clear();
             kontakty.UnselectAll();
@@ -191,14 +197,13 @@ namespace GuziecSIM
         /* [PRÓBA WYSŁANIA WIADOMOŚCI] */
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-
-            if (true) // <-- Może warunek i dodanie wiadomosci do lokalnej listy archiwum po poprawnym dodaniu przez baze?
-                MessageBox.Show("Tu wywołajcie metodę wysylajaca wiadomosc zapisana w zmiennej o nazwie nowa");
-
+            /*if (true) // <-- Może warunek i dodanie wiadomosci do lokalnej listy archiwum po poprawnym dodaniu przez baze?
+                MessageBox.Show("Tu wywołajcie metodę wysylajaca wiadomosc zapisana w zmiennej o nazwie nowa");*/
             nowa.czas = DateTime.Now;
             nowa.Text = textBox.Text;
-            archiwum.Add(nowa);
 
+            baza_danych.wyslij_krotka_wiadomosc(nowa.nadawca, nowa.odbiorca, lista.Find(x => x.login == nowa.odbiorca).kluczPub, nowa.Text, DateTime.Now.AddDays(3));
+            archiwum.Add(nowa);
             okno.Items.Clear();
             textBox.Clear();
 
