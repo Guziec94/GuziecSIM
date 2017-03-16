@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:GuziecSIM"
       mc:Ignorable="d" 
-      d:DesignHeight="380" d:DesignWidth="525"
+      d:DesignHeight="380" d:DesignWidth="548"
       Title="Rejestracja">
 
     <Grid>

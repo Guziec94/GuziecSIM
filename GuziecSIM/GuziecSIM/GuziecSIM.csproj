@@ -59,10 +59,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="baza_danych.cs" />
+    <Compile Include="PanelGlowny.xaml.cs">
+      <DependentUpon>PanelGlowny.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Rejestracja.xaml.cs">
       <DependentUpon>Rejestracja.xaml</DependentUpon>
     </Compile>
     <Compile Include="Uzytkownik.cs" />
+    <Compile Include="Wiadomosc.cs" />
     <Page Include="Logowanie.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -83,6 +87,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="PanelGlowny.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Rejestracja.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

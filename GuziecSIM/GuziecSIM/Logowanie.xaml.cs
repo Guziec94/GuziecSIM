@@ -116,5 +116,14 @@ namespace GuziecSIM
         {
             if ((!dozwolone(e.Text, true) && textBox.Text.Length == 0) || (!dozwolone(e.Text, true) && textBox.SelectedText == textBox.Text) || znakiSpecjalne(e.Text)) e.Handled = true;
         }
+
+        /*[TYMCZASOWA FUNKCJA ODPOWIEDZIALNA ZA PRZEJŚCIE Z PANELU LOGOWANIA DO PANELU UŻYTKOWNIKA PO KLIKNIĘCIU PRZYCISKU]*/
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            PanelGlowny panel = new PanelGlowny();
+
+            NavigationService nav = NavigationService.GetNavigationService(this);
+            nav.Navigate(panel);
+        }
     }
 }

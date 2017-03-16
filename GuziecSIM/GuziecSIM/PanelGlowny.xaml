@@ -1,0 +1,48 @@
+﻿<Page x:Class="GuziecSIM.PanelGlowny"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:GuziecSIM"
+      mc:Ignorable="d" 
+      d:DesignHeight="380" d:DesignWidth="548"
+      Title="PanelGlowny">
+
+    <Grid>
+        <ListBox x:Name="kontakty" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" Height="292" Margin="267,36,0,0" VerticalAlignment="Top" Width="255">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+        <ListBox x:Name="okno" HorizontalAlignment="Left" Height="216" Margin="10,36,0,0" VerticalAlignment="Top" Width="252">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="73" Margin="10,257,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="184" IsEnabled="False" Foreground="#FF505050"/>
+        <Button x:Name="button1" Content="Wyślij" HorizontalAlignment="Left" Margin="199,257,0,0" VerticalAlignment="Top" Width="63" Foreground="White" Background="#FF6FA363" BorderThickness="0" Height="71" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="button1_Click" IsEnabled="False"/>
+        <Label Content="Lista kontaktów" HorizontalAlignment="Left" Margin="262,10,0,0" VerticalAlignment="Top" FontFamily="Segoe UI Black" Foreground="#FF9BB096"/>
+        <Label x:Name="infoKonf" Content="" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top" FontFamily="Segoe UI Black" Foreground="#FF6FA363" RenderTransformOrigin="0.381,0.538" Width="189"/>
+        <Button x:Name="button1_Copy" Content="" HorizontalAlignment="Left" Margin="203,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFFAFDD8" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="button1_Copy_Click" Visibility="Hidden"/>
+        <Button x:Name="button1_Copy1" Content="" HorizontalAlignment="Left" Margin="233,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFFBCAC7" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="button1_Copy1_Click" Visibility="Hidden"/>
+        <Button x:Name="btnDod" Content="" HorizontalAlignment="Left" Margin="433,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFE7FFE4" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Visibility="Visible" Click="btnDod_Click"/>
+        <Button x:Name="btnUsuw" Content="" HorizontalAlignment="Left" Margin="493,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFFBCAC7" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="btnUsuw_Click" Visibility="Visible"/>
+        <Button x:Name="btnWyl" Content="" HorizontalAlignment="Left" Margin="463,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFFAFDD8" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="btnWyl_Click" Visibility="Visible"/>
+    </Grid>
+</Page>
