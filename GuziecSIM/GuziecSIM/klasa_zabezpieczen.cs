@@ -28,6 +28,7 @@ namespace klasa_zabezpieczen
             try
             {
                 OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Title = "Wczytaj swój klucz prywatny";
                 if (openFileDialog.ShowDialog() == true)
                 {
                     XmlDocument doc = new XmlDocument();
@@ -56,6 +57,7 @@ namespace klasa_zabezpieczen
         public bool zapisz_do_pliku(string login = null)
         {
             var dialog = new SaveFileDialog();
+            dialog.Title = "Zapisz swój plik prywatny";
             dialog.Filter = "Plik XML(.xml)|*.xml|Wszystkie pliki(*.*)|*.*";
             dialog.FileName = login == null ? "klucz prywatny.xml" : "klucz uzytkownika " + login + ".xml";
             if (dialog.ShowDialog() == true)

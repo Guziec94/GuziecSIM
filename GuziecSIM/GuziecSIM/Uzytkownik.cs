@@ -11,10 +11,12 @@
         public string ip;
         public int port;
 
-        public Uzytkownik(string login, string kluczPub)
+        public Uzytkownik(string login, string kluczPub, string imie, string opis)
         {
             this.login = login;
             this.kluczPub = kluczPub;
+            this.imie = imie;
+            this.opis = opis;
         }
     }
 }

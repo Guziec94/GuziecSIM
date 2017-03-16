@@ -16,13 +16,15 @@ namespace GuziecSIM
     public partial class Logowanie : Page
     {
         public static string _login;
-        klucze _klucz = new klucze();
+        public static klucze _klucz;
 
         public Logowanie()
         {
             InitializeComponent();
             label.ToolTip = "np. Guziec94";
             label1.ToolTip = "Klucz prywatny przypisany do konta";
+            _login = null;
+            _klucz = new klucze();
             baza_danych.polacz_z_baza();
         }
 
@@ -55,16 +57,9 @@ namespace GuziecSIM
                     {
                         string externalIP = new WebClient().DownloadString("http://icanhazip.com");
                         baza_danych.wprowadzAdresIP(_login, externalIP);
-                        MessageBox.Show("Sukces!");
-                        List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login,_klucz);
-                        if (wiadomosci != null)
-                        {
-                            foreach(string w in wiadomosci)
-                            {
-                                MessageBox.Show(w);
-                            }
-                            baza_danych.usunKrotkieWiadomosci(_login);
-                        }
+                        PanelGlowny panel = new PanelGlowny();
+                        NavigationService nav = NavigationService.GetNavigationService(this);
+                        nav.Navigate(panel);
                     }
                     else
                     {
@@ -114,15 +109,6 @@ namespace GuziecSIM
         private void textBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if ((!dozwolone(e.Text, true) && textBox.Text.Length == 0) || (!dozwolone(e.Text, true) && textBox.SelectedText == textBox.Text) || znakiSpecjalne(e.Text)) e.Handled = true;
-        }
-
-        /*[TYMCZASOWA FUNKCJA ODPOWIEDZIALNA ZA PRZEJŚCIE Z PANELU LOGOWANIA DO PANELU UŻYTKOWNIKA PO KLIKNIĘCIU PRZYCISKU]*/
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            PanelGlowny panel = new PanelGlowny();
-
-            NavigationService nav = NavigationService.GetNavigationService(this);
-            nav.Navigate(panel);
         }
     }
 }

@@ -118,7 +118,7 @@ namespace baza_danych_azure
                     SqlCommand executeQuery = new SqlCommand(query, cnn);
                     executeQuery.Parameters.AddWithValue("login", login);
                     executeQuery.ExecuteNonQuery();
-                    usunDane(login);
+                    usunAdresIP(login);
                     return true;
                 }
                 catch (Exception)
@@ -265,7 +265,7 @@ namespace baza_danych_azure
             executeQuery.ExecuteNonQuery();
         }
 
-        public static void usunDane (string login)
+        public static void usunAdresIP(string login)
         {
             string query = "DELETE FROM dostepni_uzytkownicy WHERE login=@login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
@@ -298,7 +298,7 @@ namespace baza_danych_azure
                             {
                                 foreach (XmlNode childnode in node)
                                 {
-                                    lista_uzytkownikow.Add(new Uzytkownik(childnode.FirstChild.InnerText, childnode.LastChild.InnerXml));
+                                    lista_uzytkownikow.Add(new Uzytkownik(childnode.FirstChild.InnerText, childnode.FirstChild.NextSibling.InnerXml, childnode.FirstChild.NextSibling.NextSibling.InnerText, childnode.LastChild.InnerText));
                                 }
                             }
                             return lista_uzytkownikow;
@@ -319,9 +319,7 @@ namespace baza_danych_azure
         public static void lista_kontaktow_do_xml(List<Uzytkownik> lista_kontaktow, string login)
         {
             XmlDocument temp = new XmlDocument();
-            var xml = new XElement("Lista_kontaktow", lista_kontaktow.Select
-                (x => new XElement("kontakt", new XElement("login", x.login), new XElement("klucz_publiczny", XElement.Parse(x.kluczPub)))));
-
+            var xml = new XElement("Lista_kontaktow", lista_kontaktow.Select(x => new XElement("kontakt", new XElement("login", x.login), new XElement("klucz_publiczny", XElement.Parse(x.kluczPub)), new XElement("imie", x.imie), new XElement("opis", x.opis))));
             string query = "UPDATE lista_kontaktow SET kontakty = @kontakty WHERE login=@login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);

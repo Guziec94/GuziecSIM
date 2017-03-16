@@ -5,6 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
+using baza_danych_azure;
+using klasa_zabezpieczen;
 
 namespace GuziecSIM
 {
@@ -14,6 +16,7 @@ namespace GuziecSIM
     public partial class PanelGlowny : Page
     {
         public string _login;
+        public klucze _klucz;
 
         public List<Uzytkownik> lista = new List<Uzytkownik>();
         public List<Wiadomosc> archiwum = new List<Wiadomosc>();
@@ -24,6 +27,7 @@ namespace GuziecSIM
             InitializeComponent();
 
             _login = Logowanie._login; // <-- Pobieram info ze strony Logowania
+            _klucz = Logowanie._klucz;
 
             Application.Current.MainWindow.Width = 548;
             Application.Current.MainWindow.Title = "GuziecSIM - " + _login;
@@ -37,9 +41,20 @@ namespace GuziecSIM
             btnUsuw.ToolTip = "Usuń konto";
             btnDod.ToolTip = "Dodaj kontakt";
 
-            MessageBox.Show("Tutaj wywołajcie metody uzupełniające informacje o kontaktach i wiadomościach z bazy danch zamiast atrapy poniżej");
-
-            pokazListeKontaktow(lista);
+            lista = baza_danych.pobierz_liste_kontaktow(_login);
+            if(lista.Count>0)
+            {
+                pokazListeKontaktow(lista);
+            }
+            List<string> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
+            if (wiadomosci != null)
+            {
+                foreach (string w in wiadomosci)
+                {
+                    MessageBox.Show(w);
+                }
+                baza_danych.usunKrotkieWiadomosci(_login);
+            }
         }
 
         /* [FUNKCJA UKAZUJACA LISTĘ KONTAKTÓW OTRZYMANA W POSTACI LISTY] */
@@ -235,8 +250,9 @@ namespace GuziecSIM
         /* [WYBRANO OPCJĘ WYLOGOWANIA SIĘ] */
         private void btnWyl_Click(object sender, RoutedEventArgs e)
         {
+            baza_danych.usunAdresIP(_login);
+            Application.Current.MainWindow.Title = "GuziecSIM";
             Logowanie logowanie = new Logowanie();
-
             NavigationService nav = NavigationService.GetNavigationService(this);
             nav.Navigate(logowanie);
         }
@@ -244,7 +260,22 @@ namespace GuziecSIM
         /* [WYBRANO OPCJĘ USUWANIA KONTA] */
         private void btnUsuw_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Tutaj usuńcie konto użytkownika z bazy danych po potwierdzeniu chęci jego usunięcia. Login w polu _login");
+            if (MessageBox.Show("Czy na pewno chcesz usunąć swojek konto? Ta operacja jest nieodwracalna. Operację należy potwierdzić kluczem.", "Usuwanie konta - " + _login, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                _klucz.zaladuj_z_pliku();
+                if (baza_danych.sprawdz_dane(_login, _klucz))
+                {
+                    baza_danych.usun_konto(_login,_klucz);
+                    Application.Current.MainWindow.Title = "GuziecSIM";
+                    Logowanie logowanie = new Logowanie();
+                    NavigationService nav = NavigationService.GetNavigationService(this);
+                    nav.Navigate(logowanie);
+                }
+                else
+                {
+                    MessageBox.Show("Podano nie poprawny klucz, konto nie zostało usunięte.");
+                }
+            }
         }
 
         /* [WYBRANO OPCJĘ DODAWANIA KONTAKTU] */

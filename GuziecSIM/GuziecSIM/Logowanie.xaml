@@ -17,6 +17,5 @@
         <Button x:Name="button1" Content="Zaloguj" HorizontalAlignment="Left" Margin="141,265,0,0" VerticalAlignment="Top" Width="243" Foreground="White" Background="#FF5CB85A" BorderThickness="0" Height="36" BorderBrush="#FFE6E6E6" Click="button1_Click"/>
         <Label x:Name="label2" Content="nie wybrano .." HorizontalAlignment="Left" Margin="222,228,0,0" VerticalAlignment="Top" Foreground="#FF505050"/>
         <Label x:Name="label3" Content="Utwórz konto" HorizontalAlignment="Left" Margin="141,306,0,0" VerticalAlignment="Top" FontSize="11" Foreground="#FF506CE4" RenderTransformOrigin="0.329,1.08" PreviewMouseDown="label3_MouseDown"/>
-        <Button Content="tmp" HorizontalAlignment="Left" Margin="43,331,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click_1"/>
     </Grid>
 </Page>
