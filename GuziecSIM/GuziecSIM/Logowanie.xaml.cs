@@ -25,6 +25,7 @@ namespace GuziecSIM
             label1.ToolTip = "Klucz prywatny przypisany do konta";
             _login = null;
             _klucz = new klucze();
+
             baza_danych.polacz_z_baza();
         }
 
@@ -55,7 +56,7 @@ namespace GuziecSIM
                 {
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
-                        string externalIP = new WebClient().DownloadString("http://icanhazip.com");
+                        string externalIP = new WebClient().DownloadString("http://icanhazip.com").Replace("\n","");
                         baza_danych.wprowadzAdresIP(_login, externalIP);
                         PanelGlowny panel = new PanelGlowny();
                         NavigationService nav = NavigationService.GetNavigationService(this);

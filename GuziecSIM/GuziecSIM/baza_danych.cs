@@ -7,17 +7,18 @@ using GuziecSIM;
 using System.Xml;
 using System.Linq;
 using System.Xml.Linq;
+using System.Data;
 
 namespace baza_danych_azure
 {
     public class baza_danych
     {
         public static SqlConnection cnn;
+        public static string connectionString = "Data Source=tcp:LENOVOY510P;Initial Catalog = GuziecSIMDB; User ID = Guziec94; Password=P@ssw0rd";
 
         public static void polacz_z_baza()
         {
-            string connetionString = "Data Source=tcp:LENOVOY510P;Initial Catalog = GuziecSIMDB; User ID = Guziec94; Password=P@ssw0rd";
-            cnn = new SqlConnection(connetionString);
+            cnn = new SqlConnection(connectionString);
             try
             {
                 cnn.Open();
@@ -38,6 +39,31 @@ namespace baza_danych_azure
             {
                 MessageBox.Show("Nie udało się rozłączyć.");
             }
+        }
+
+        public static async void broker()
+        {
+            SqlDependency.Start(connectionString);
+            var _connection = new SqlConnection(connectionString);
+            _connection.Open();
+            var _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.krotkie_wiadomosci", _connection);
+            _sqlCommand.Notification = null;
+            var dependency = new SqlDependency(_sqlCommand);
+            dependency.OnChange += SqlDependencyOnChange;
+            await _sqlCommand.ExecuteReaderAsync();
+        }
+
+        private static void SqlDependencyOnChange(object sender, SqlNotificationEventArgs eventArgs)
+        {
+            if (eventArgs.Info == SqlNotificationInfo.Invalid)
+            {
+                Console.WriteLine("The above notification query is not valid.");
+            }
+            else
+            {
+                MessageBox.Show("Notification Info: " + eventArgs.Info);
+            }
+            broker();
         }
 
         public static bool sprawdz_dane(string login, klucze key)

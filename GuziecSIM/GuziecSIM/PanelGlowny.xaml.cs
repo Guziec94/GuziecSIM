@@ -267,18 +267,22 @@ namespace GuziecSIM
         {
             if (MessageBox.Show("Czy na pewno chcesz usunąć swojek konto? Ta operacja jest nieodwracalna. Operację należy potwierdzić kluczem.", "Usuwanie konta - " + _login, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                _klucz.zaladuj_z_pliku();
-                if (baza_danych.sprawdz_dane(_login, _klucz))
+                klucze temp = new klucze();
+                temp.zaladuj_z_pliku();
+                if (temp.klucz_prywatny!=null)
                 {
-                    baza_danych.usun_konto(_login,_klucz);
-                    Application.Current.MainWindow.Title = "GuziecSIM";
-                    Logowanie logowanie = new Logowanie();
-                    NavigationService nav = NavigationService.GetNavigationService(this);
-                    nav.Navigate(logowanie);
-                }
-                else
-                {
-                    MessageBox.Show("Podano nie poprawny klucz, konto nie zostało usunięte.");
+                    if (baza_danych.sprawdz_dane(_login, temp))
+                    {
+                        baza_danych.usun_konto(_login, _klucz);
+                        Application.Current.MainWindow.Title = "GuziecSIM";
+                        Logowanie logowanie = new Logowanie();
+                        NavigationService nav = NavigationService.GetNavigationService(this);
+                        nav.Navigate(logowanie);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Podano nie poprawny klucz, konto nie zostało usunięte.");
+                    }
                 }
             }
         }
