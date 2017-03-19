@@ -46,7 +46,8 @@ namespace baza_danych_azure
             SqlDependency.Start(connectionString);
             var _connection = new SqlConnection(connectionString);
             _connection.Open();
-            var _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.krotkie_wiadomosci", _connection);
+            SqlCommand _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.krotkie_wiadomosci where login_odbiorcy = @login", _connection);
+            _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
             _sqlCommand.Notification = null;
             var dependency = new SqlDependency(_sqlCommand);
             dependency.OnChange += SqlDependencyOnChange;
@@ -61,9 +62,10 @@ namespace baza_danych_azure
             }
             else
             {
-                MessageBox.Show("Notification Info: " + eventArgs.Info);
+                broker();
+                MessageBox.Show("jest nowa wiadomosc");
+                Logowanie.cos.wczytaj_wiadomosci();//wywolanie funkcji wczytujacej wiadomosci
             }
-            broker();
         }
 
         public static bool sprawdz_dane(string login, klucze key)

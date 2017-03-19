@@ -46,6 +46,12 @@ namespace GuziecSIM
             {
                 pokazListeKontaktow(lista);
             }
+            wczytaj_wiadomosci();
+            baza_danych.broker();
+        }
+
+        internal void wczytaj_wiadomosci()
+        {
             List<Wiadomosc> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
             if (wiadomosci != null)
             {
@@ -59,7 +65,7 @@ namespace GuziecSIM
                     }
                 }
                 baza_danych.usunKrotkieWiadomosci(_login);
-                MessageBox.Show("Masz nieodczytane wiadomosci!");
+                //tu by sie przydalo odswiezyc okno rozmowy
             }
         }
 
@@ -175,7 +181,7 @@ namespace GuziecSIM
 
                     okno.Items.Add(group);
 
-                    MessageBox.Show("Tutaj usuwamy z bazy danch aktualnie rozpatrywaną wiadomość ponieważ po otworzeniu konwersacji z użytkownikiem zostały one odczytane");
+                    //MessageBox.Show("Tutaj usuwamy z bazy danch aktualnie rozpatrywaną wiadomość ponieważ po otworzeniu konwersacji z użytkownikiem zostały one odczytane");
                 }
             }
 

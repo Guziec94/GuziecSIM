@@ -17,7 +17,7 @@ namespace GuziecSIM
     {
         public static string _login;
         public static klucze _klucz;
-
+        public static PanelGlowny cos;
         public Logowanie()
         {
             InitializeComponent();
@@ -58,9 +58,9 @@ namespace GuziecSIM
                     {
                         string externalIP = new WebClient().DownloadString("http://icanhazip.com").Replace("\n","");
                         baza_danych.wprowadzAdresIP(_login, externalIP);
-                        PanelGlowny panel = new PanelGlowny();
+                        cos = new PanelGlowny();
                         NavigationService nav = NavigationService.GetNavigationService(this);
-                        nav.Navigate(panel);
+                        nav.Navigate(cos);
                     }
                     else
                     {
