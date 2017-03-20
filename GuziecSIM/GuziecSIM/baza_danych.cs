@@ -41,31 +41,41 @@ namespace baza_danych_azure
             }
         }
 
+        static SqlDependency dependency;
         public static async void broker()
         {
-            SqlDependency.Start(connectionString);
-            var _connection = new SqlConnection(connectionString);
-            _connection.Open();
-            SqlCommand _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.krotkie_wiadomosci where login_odbiorcy = @login", _connection);
-            _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
-            _sqlCommand.Notification = null;
-            var dependency = new SqlDependency(_sqlCommand);
-            dependency.OnChange += SqlDependencyOnChange;
-            await _sqlCommand.ExecuteReaderAsync();
+                SqlDependency.Start(connectionString);
+                var _connection = new SqlConnection(connectionString);
+                _connection.Open();
+                SqlCommand _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.krotkie_wiadomosci where login_odbiorcy = @login", _connection);
+                _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
+                _sqlCommand.Notification = null;
+                dependency = new SqlDependency(_sqlCommand);
+                dependency.OnChange += SqlDependencyOnChange;
+                await _sqlCommand.ExecuteReaderAsync();
         }
 
         private static void SqlDependencyOnChange(object sender, SqlNotificationEventArgs eventArgs)
         {
+            broker();
             if (eventArgs.Info == SqlNotificationInfo.Invalid)
             {
                 Console.WriteLine("The above notification query is not valid.");
             }
             else
             {
-                broker();
-                MessageBox.Show("jest nowa wiadomosc");
-                Logowanie.cos.wczytaj_wiadomosci();//wywolanie funkcji wczytujacej wiadomosci
+                if (eventArgs.Info.ToString() == "Insert")
+                {
+                    System.Media.SystemSounds.Beep.Play();
+                    Logowanie.cos.wczytaj_wiadomosci();//wywolanie funkcji wczytujacej wiadomosci
+                }
             }
+        }
+
+        public static void broker_stop()
+        {
+            SqlDependency.Stop(connectionString);
+            dependency = null;
         }
 
         public static bool sprawdz_dane(string login, klucze key)

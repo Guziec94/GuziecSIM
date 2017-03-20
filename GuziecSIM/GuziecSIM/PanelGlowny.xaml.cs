@@ -20,7 +20,7 @@ namespace GuziecSIM
 
         public List<Uzytkownik> lista = new List<Uzytkownik>();
         public List<Wiadomosc> archiwum = new List<Wiadomosc>();
-        private Wiadomosc nowa;
+        private Wiadomosc nowa = null;
 
         public PanelGlowny()
         {
@@ -42,31 +42,36 @@ namespace GuziecSIM
             btnDod.ToolTip = "Dodaj kontakt";
 
             lista = baza_danych.pobierz_liste_kontaktow(_login);
-            if(lista != null)
-            {
-                pokazListeKontaktow(lista);
-            }
+            if (lista != null) pokazListeKontaktow(lista);
+
             wczytaj_wiadomosci();
             baza_danych.broker();
         }
 
-        internal void wczytaj_wiadomosci()
+        public void wczytaj_wiadomosci()
         {
-            List<Wiadomosc> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
-            if (wiadomosci != null)
+            Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                foreach (Wiadomosc w in wiadomosci)
+                List<Wiadomosc> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
+                if (wiadomosci != null)
                 {
-                    archiwum.Add(w);
-                    foreach (var kontakt in kontakty.Items)
+                    foreach (Wiadomosc w in wiadomosci)
                     {
-                        TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
-                        if (login.Text == w.nadawca) { login.Foreground = Brushes.Red; break; }
+                        archiwum.Add(w);
+                        foreach (var kontakt in kontakty.Items)
+                        {
+                            TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                            if (login.Text == w.nadawca)
+                            {
+                                login.Foreground = Brushes.Red;
+                                pokazWiadom(w.nadawca);
+                                break;
+                            }
+                        }
                     }
+                    baza_danych.usunKrotkieWiadomosci(_login);
                 }
-                baza_danych.usunKrotkieWiadomosci(_login);
-                //tu by sie przydalo odswiezyc okno rozmowy
-            }
+            });
         }
 
         /* [FUNKCJA UKAZUJACA LISTĘ KONTAKTÓW OTRZYMANA W POSTACI LISTY] */
@@ -125,65 +130,70 @@ namespace GuziecSIM
             lista.UnselectAll();
         }
 
+        private void pokazWiadom(string osoba)
+        {
+            Application.Current.Dispatcher.Invoke((Action)delegate {
+                okno.Items.Clear();
+                foreach (var wiadomosc in archiwum)
+                {
+                    if (
+                        (wiadomosc.nadawca == _login && wiadomosc.odbiorca == osoba) ||
+                        (wiadomosc.odbiorca == _login && wiadomosc.nadawca == osoba)
+                        )
+                    {
+                        GroupBox group = new GroupBox();
+                        ListBox list = new ListBox();
+                        group.Content = list;
+
+                        list.BorderThickness = new Thickness(0);
+                        list.Background = new SolidColorBrush(Color.FromArgb(0, (byte)0, (byte)0, (byte)0));
+
+                        list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+
+                        group.Width = 220;
+                        group.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
+                        group.BorderThickness = new Thickness(0);
+                        group.Background = wiadomosc.nadawca == _login ? new SolidColorBrush(Color.FromArgb(255, (byte)111, (byte)163, (byte)99)) : new SolidColorBrush(Color.FromArgb(255, (byte)101, (byte)140, (byte)183));
+                        group.MouseLeave += Group_MouseLeave;
+                        group.Margin = new Thickness(0, 6, 0, 0);
+
+                        TextBlock nadawca = new TextBlock();
+
+                        nadawca.Foreground = Brushes.White;
+                        nadawca.FontSize = 12;
+                        nadawca.Text = wiadomosc.nadawca;
+
+                        TextBlock czas = new TextBlock();
+
+                        czas.Foreground = Brushes.White;
+                        czas.FontSize = 10;
+                        czas.Text = wiadomosc.czas.ToString();
+                        czas.TextWrapping = TextWrapping.WrapWithOverflow;
+
+                        TextBlock text = new TextBlock();
+
+                        text.Foreground = Brushes.LightGray;
+                        text.FontSize = 10;
+                        text.Text = wiadomosc.Text;
+                        text.TextWrapping = TextWrapping.WrapWithOverflow;
+
+                        list.Items.Add(nadawca);
+                        list.Items.Add(czas);
+                        list.Items.Add(text);
+
+                        okno.Items.Add(group);
+                    }
+                }
+            });
+        }
+
         /* [OTWARCIE OKNA KONWERSACJI Z INNYM UŻYTKOWNIKIEM] */
         private void Group_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             nowa = new Wiadomosc() { nadawca = _login, odbiorca = ((GroupBox)sender).Name };
 
-            okno.Items.Clear();
             kontakty.UnselectAll();
-            foreach (var wiadomosc in archiwum)
-            {
-                if (
-                    (wiadomosc.nadawca == _login && wiadomosc.odbiorca == nowa.odbiorca) ||
-                    (wiadomosc.odbiorca == _login && wiadomosc.nadawca == nowa.odbiorca)
-                    )
-                {
-                    GroupBox group = new GroupBox();
-                    ListBox list = new ListBox();
-                    group.Content = list;
-
-                    list.BorderThickness = new Thickness(0);
-                    list.Background = new SolidColorBrush(Color.FromArgb(0, (byte)0, (byte)0, (byte)0));
-
-                    list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-
-                    group.Width = 220;
-                    group.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
-                    group.BorderThickness = new Thickness(0);
-                    group.Background = wiadomosc.nadawca == _login ? new SolidColorBrush(Color.FromArgb(255, (byte)111, (byte)163, (byte)99)) : new SolidColorBrush(Color.FromArgb(255, (byte)101, (byte)140, (byte)183));
-                    group.MouseLeave += Group_MouseLeave;
-                    group.Margin = new Thickness(0, 6, 0, 0);
-
-                    TextBlock nadawca = new TextBlock();
-
-                    nadawca.Foreground = Brushes.White;
-                    nadawca.FontSize = 12;
-                    nadawca.Text = wiadomosc.nadawca;
-
-                    TextBlock czas = new TextBlock();
-
-                    czas.Foreground = Brushes.White;
-                    czas.FontSize = 10;
-                    czas.Text = wiadomosc.czas.ToString();
-                    czas.TextWrapping = TextWrapping.WrapWithOverflow;
-
-                    TextBlock text = new TextBlock();
-
-                    text.Foreground = Brushes.LightGray;
-                    text.FontSize = 10;
-                    text.Text = wiadomosc.Text;
-                    text.TextWrapping = TextWrapping.WrapWithOverflow;
-
-                    list.Items.Add(nadawca);
-                    list.Items.Add(czas);
-                    list.Items.Add(text);
-
-                    okno.Items.Add(group);
-
-                    //MessageBox.Show("Tutaj usuwamy z bazy danch aktualnie rozpatrywaną wiadomość ponieważ po otworzeniu konwersacji z użytkownikiem zostały one odczytane");
-                }
-            }
+            pokazWiadom(nowa.odbiorca);
 
             infoKonf.Content = nowa.odbiorca;
 
@@ -203,18 +213,15 @@ namespace GuziecSIM
         /* [PRÓBA WYSŁANIA WIADOMOŚCI] */
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            /*if (true) // <-- Może warunek i dodanie wiadomosci do lokalnej listy archiwum po poprawnym dodaniu przez baze?
-                MessageBox.Show("Tu wywołajcie metodę wysylajaca wiadomosc zapisana w zmiennej o nazwie nowa");*/
             nowa.czas = DateTime.Now;
             nowa.Text = textBox.Text;
 
             baza_danych.wyslij_krotka_wiadomosc(nowa.nadawca, nowa.odbiorca, lista.Find(x => x.login == nowa.odbiorca).kluczPub, nowa.Text, DateTime.Now.AddDays(3));
             archiwum.Add(nowa);
-            okno.Items.Clear();
+
             textBox.Clear();
 
-            GroupBox g = new GroupBox(); g.Name = nowa.odbiorca;
-            Group_MouseDoubleClick(g, null);
+            pokazWiadom(nowa.odbiorca);
         }
 
         /* [ZMINIMALIZOWANIE OKNA ROZMOWY] */
@@ -226,6 +233,8 @@ namespace GuziecSIM
 
             textBox.IsEnabled = false;
             button1.IsEnabled = false;
+
+            nowa = null;
 
             button1_Copy.Visibility = Visibility.Hidden;
             button1_Copy1.Visibility = Visibility.Hidden;
@@ -249,6 +258,8 @@ namespace GuziecSIM
                 }
             }
 
+            nowa = null;
+
             textBox.IsEnabled = false;
             button1.IsEnabled = false;
 
@@ -262,6 +273,7 @@ namespace GuziecSIM
         private void btnWyl_Click(object sender, RoutedEventArgs e)
         {
             baza_danych.usunAdresIP(_login);
+            baza_danych.broker_stop();
             Application.Current.MainWindow.Title = "GuziecSIM";
             Logowanie logowanie = new Logowanie();
             NavigationService nav = NavigationService.GetNavigationService(this);
@@ -275,7 +287,7 @@ namespace GuziecSIM
             {
                 klucze temp = new klucze();
                 temp.zaladuj_z_pliku();
-                if (temp.klucz_prywatny!=null)
+                if (temp.klucz_prywatny != null)
                 {
                     if (baza_danych.sprawdz_dane(_login, temp))
                     {
