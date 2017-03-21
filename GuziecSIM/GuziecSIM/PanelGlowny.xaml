@@ -9,32 +9,8 @@
       Title="PanelGlowny">
 
     <Grid>
-        <ListBox x:Name="kontakty" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" Height="292" Margin="267,36,0,0" VerticalAlignment="Top" Width="255">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ListBoxItem">
-                                <ContentPresenter/>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </ListBox.ItemContainerStyle>
-        </ListBox>
-        <ListBox x:Name="okno" HorizontalAlignment="Left" Height="216" Margin="10,36,0,0" VerticalAlignment="Top" Width="252">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ListBoxItem">
-                                <ContentPresenter/>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </ListBox.ItemContainerStyle>
-        </ListBox>
+        <ListBox x:Name="kontakty" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Left" Height="292" Margin="267,36,0,0" VerticalAlignment="Top" Width="255" />
+        <ListBox x:Name="okno" HorizontalAlignment="Left" Height="216" Margin="10,36,0,0" VerticalAlignment="Top" Width="252" />
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="73" Margin="10,257,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="184" IsEnabled="False" Foreground="#FF505050"/>
         <Button x:Name="button1" Content="Wyślij" HorizontalAlignment="Left" Margin="199,257,0,0" VerticalAlignment="Top" Width="63" Foreground="White" Background="#FF6FA363" BorderThickness="0" Height="71" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="button1_Click" IsEnabled="False"/>
         <Label Content="Lista kontaktów" HorizontalAlignment="Left" Margin="262,10,0,0" VerticalAlignment="Top" FontFamily="Segoe UI Black" Foreground="#FF9BB096"/>

@@ -20,7 +20,8 @@ namespace GuziecSIM
         public static PanelGlowny cos;
         public Logowanie()
         {
-            InitializeComponent();
+            InitializeComponent(); 
+
             label.ToolTip = "np. Guziec94";
             label1.ToolTip = "Klucz prywatny przypisany do konta";
             _login = null;
@@ -74,7 +75,7 @@ namespace GuziecSIM
 
         /* [PRZEKIEROWANIE DO STRONY REJESTRACJI] */
         private void label3_MouseDown(object sender, MouseButtonEventArgs e)
-        {  
+        {
             Rejestracja rejestracja = new Rejestracja();
 
             NavigationService nav = NavigationService.GetNavigationService(this);
