@@ -112,15 +112,28 @@ namespace GuziecSIM
                 opis.Text = kontakt.opis;
                 opis.TextWrapping = TextWrapping.WrapWithOverflow;
 
+                Button btnUsun = new Button();
+                btnUsun.Content = "Usuń znajomego";
+                btnUsun.Name = login.Text;
+                btnUsun.MouseDoubleClick += BtnUsun_MouseDoubleClick;
+
                 list.Items.Add(login);
                 list.Items.Add(imie);
                 list.Items.Add(opis);
+                list.Items.Add(btnUsun);
 
                 group.Name = login.Text;
                 group.MouseDoubleClick += Group_MouseDoubleClick;
 
                 kontakty.Items.Add(group);
             }
+        }
+
+        private void BtnUsun_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            string uzytkownikDoUsuniecia = (sender as Button).Name;
+
+            MessageBox.Show("Usuńcie tego użytkownika ze znajomych zalogowanego");
         }
 
         /* [FUNKCJA KASUJĄCA NIEBIESKIE PODŚWIETLENIE Z ELEMENTÓW LISTY PO ZJECHANIU Z NICH KURSOREM] */
