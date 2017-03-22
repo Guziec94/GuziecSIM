@@ -468,7 +468,19 @@ namespace GuziecSIM
         /* [WYBRANO OPCJĘ DODAWANIA KONTAKTU] */
         private void btnDod_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Tutaj dodamy kontakt");
+            PanelDodawaniaZnajomego inputDialog = new PanelDodawaniaZnajomego();
+
+            //inputDialog.Owner = Window.GetWindow(this);
+            //inputDialog.Topmost = true;
+
+            if (inputDialog.ShowDialog() == true)
+            {
+                if(baza_danych.czyLoginIstnieje(inputDialog.Znajomy))
+                {
+                    // Dodacie ich do znajomych
+                }
+                else MessageBox.Show("Użytkownik o nazwie '" + inputDialog.Znajomy + "' nie istnieje");
+            }
         }
 
         private void button1_Copy2_Click(object sender, RoutedEventArgs e)
