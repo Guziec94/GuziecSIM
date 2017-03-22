@@ -194,38 +194,45 @@ namespace GuziecSIM
         {
             // ODBIERAMY INFORMACJE O LOGINIE UZYTKOWNIKA KTORYCH CHCEMY USUNAC Z LISTY ZNAJOMYCH
             string uzytkownikDoUsuniecia = (sender as Button).Name;
-
-            // JESLI AKTUALNIE OTWARTA BYLA KONWERSACJA Z OSOBA KTORA USUWAMY Z LISTY ZNAJOMYCH TO KONWERSACJE ZAMYKAMY KORZYSTAJAC ZE ZDEFINIOWANEGO WCZESNIEJ EVENTU
-            if (infoKonf.Content.ToString() == uzytkownikDoUsuniecia)
-                button1_Copy1_Click(null, null);
-            else
+            string tresc_powiadomienia = "Czy na pewno chcesz usunąć użytkownika " + uzytkownikDoUsuniecia + "? Po tej operacji nie będziecie mogli się komunikować.";
+            if (MessageBox.Show(tresc_powiadomienia, "Usuwanie użytkownika - " + uzytkownikDoUsuniecia, MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                // NA LISCIE ZNAJOMYCH ZNAJDUJEMY USUWANEGO UZYTKOWNIKA I KOLOR JEGO LOGINU ZMIENIAMY SPOWEROTEM NA CZARNY
-                foreach (var kontakt in kontakty.Items)
+                // JESLI AKTUALNIE OTWARTA BYLA KONWERSACJA Z OSOBA KTORA USUWAMY Z LISTY ZNAJOMYCH TO KONWERSACJE ZAMYKAMY KORZYSTAJAC ZE ZDEFINIOWANEGO WCZESNIEJ EVENTU
+                if (infoKonf.Content.ToString() == uzytkownikDoUsuniecia)
+                    button1_Copy1_Click(null, null);
+                else
                 {
-                    TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
-                    if (login.Text == uzytkownikDoUsuniecia) { login.Foreground = Brushes.Black; break; }
-                }
-
-                // USUWAMY Z ARCHIWUM WIADOMOSCI ZWIAZANE Z UZYTKOWNIKIEM KTOREGO USUWAMY
-                for (int i = 0; i < archiwum.Count; i++)
-                {
-                    if (archiwum[i].odbiorca == uzytkownikDoUsuniecia || archiwum[i].nadawca == uzytkownikDoUsuniecia)
+                    // NA LISCIE ZNAJOMYCH ZNAJDUJEMY USUWANEGO UZYTKOWNIKA I KOLOR JEGO LOGINU ZMIENIAMY SPOWEROTEM NA CZARNY
+                    foreach (var kontakt in kontakty.Items)
                     {
-                        archiwum.Remove(archiwum[i--]);
-                        if (i < -1) i = -1;
+                        TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                        if (login.Text == uzytkownikDoUsuniecia) { login.Foreground = Brushes.Black; break; }
+                    }
+
+                    // USUWAMY Z ARCHIWUM WIADOMOSCI ZWIAZANE Z UZYTKOWNIKIEM KTOREGO USUWAMY
+                    for (int i = 0; i < archiwum.Count; i++)
+                    {
+                        if (archiwum[i].odbiorca == uzytkownikDoUsuniecia || archiwum[i].nadawca == uzytkownikDoUsuniecia)
+                        {
+                            archiwum.Remove(archiwum[i--]);
+                            if (i < -1) i = -1;
+                        }
                     }
                 }
+
+                // USUWAMY UZYTKOWNIKA Z LISTY ZAWIERAJACEJ ZNAJOMYCH
+                lista.Remove(lista.Find(x => x.login == uzytkownikDoUsuniecia));
+
+                // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
+                pokazListeKontaktow(lista);
+
+                // UZYTKOWNIK O ODEBRANYM LOGINIE JEST USUWANY Z BAZY DANYCH Z LISTY ZNAJOMYCH ZALOGOWANEGO UZYTKOWNIKA
+                baza_danych.lista_kontaktow_do_xml(lista, _login);
+                List<Uzytkownik> lista_usuwanego = new List<Uzytkownik>();
+                lista_usuwanego = baza_danych.pobierz_liste_kontaktow(uzytkownikDoUsuniecia);
+                lista_usuwanego.Remove(lista_usuwanego.Find(x => x.login == _login));
+                baza_danych.lista_kontaktow_do_xml(lista_usuwanego, uzytkownikDoUsuniecia);
             }
-
-            // USUWAMY UZYTKOWNIKA Z LISTY ZAWIERAJACEJ ZNAJOMYCH
-            lista.Remove(lista.Find(x => x.login == uzytkownikDoUsuniecia));
-
-            // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
-            pokazListeKontaktow(lista);
-
-            // UZYTKOWNIK O ODEBRANYM LOGINIE JEST USUWANY Z BAZY DANYCH Z LISTY ZNAJOMYCH ZALOGOWANEGO UZYTKOWNIKA
-            MessageBox.Show("Usuńcie tego użytkownika ze znajomych zalogowanego");
         }
 
         /* [FUNKCJA ODSWIEZAJACA OKNO KONWERSACJI (CZYSCI OKNO I WCZYTUJE WSZYSTKIE WIADOMOSCI KONWERSACJI Z LISTY ARCHIWUM)] */
