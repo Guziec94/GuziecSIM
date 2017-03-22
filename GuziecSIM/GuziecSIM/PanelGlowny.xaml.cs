@@ -63,6 +63,12 @@ namespace GuziecSIM
 
             // ROZPOCZYNAMY RAPORTOWANIE BAZY DANYCH O WPROWADZONYCH W NIEJ ZMIANACH
             baza_danych.broker();
+            wczytaj_wiadomosci();
+            if(archiwum.Count>0)
+            {
+                System.Media.SystemSounds.Beep.Play();
+            }
+            okno.Dispatcher.Invoke(new Action(() => okno.Items.Clear()), System.Windows.Threading.DispatcherPriority.Normal);
         }
 
         public void wczytaj_wiadomosci()
@@ -87,7 +93,6 @@ namespace GuziecSIM
                             if (login.Text == w.nadawca)
                             {
                                 login.Foreground = Brushes.Red;
-                                pokazWiadom(w.nadawca);
                                 break;
                             }
                         }
@@ -440,6 +445,7 @@ namespace GuziecSIM
                         Application.Current.MainWindow.Title = "GuziecSIM";
 
                         // PRZEKIEROWUJEMY UZYTKOWNIKA SPOWROTEM NA STORNE LOGOWANIA
+                        baza_danych.broker_stop();
                         Logowanie logowanie = new Logowanie();
                         NavigationService nav = NavigationService.GetNavigationService(this);
                         nav.Navigate(logowanie);

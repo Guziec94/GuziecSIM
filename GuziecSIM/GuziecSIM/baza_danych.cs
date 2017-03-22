@@ -74,7 +74,7 @@ namespace baza_danych_azure
 
         public static void broker_stop()
         {
-            SqlDependency.Stop(connectionString);
+            dependency.OnChange -= SqlDependencyOnChange;
             dependency = null;
         }
 
