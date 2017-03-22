@@ -47,7 +47,7 @@ namespace baza_danych_azure
                 SqlDependency.Start(connectionString);
                 var _connection = new SqlConnection(connectionString);
                 _connection.Open();
-                SqlCommand _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.krotkie_wiadomosci where login_odbiorcy = @login", _connection);
+                SqlCommand _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.wiadomosci where login_odbiorcy = @login", _connection);
                 _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
                 _sqlCommand.Notification = null;
                 dependency = new SqlDependency(_sqlCommand);
@@ -152,7 +152,7 @@ namespace baza_danych_azure
             {
                 try
                 {
-                    string query = "delete from uzytkownicy where login = @login;delete from lista_kontaktow where login=@login;delete from krotkie_wiadomosci where login_odbiorcy = @login or login_wysylajacego = @login";
+                    string query = "delete from uzytkownicy where login = @login;delete from lista_kontaktow where login=@login;delete from wiadomosci where login_odbiorcy = @login or login_wysylajacego = @login";
                     SqlCommand executeQuery = new SqlCommand(query, cnn);
                     executeQuery.Parameters.AddWithValue("login", login);
                     executeQuery.ExecuteNonQuery();
@@ -206,7 +206,7 @@ namespace baza_danych_azure
         public static List<Wiadomosc> sprawdzKrotkieWiadomosci(string login, klucze klucz_odbierajacego)
         {
             List<Wiadomosc> wiadomosci = new List<Wiadomosc>();
-            string query = "select login_wysylajacego, tresc, czas_wyslania from krotkie_wiadomosci where login_odbiorcy = @login";
+            string query = "select login_wysylajacego, tresc, czas_wyslania from wiadomosci where login_odbiorcy = @login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             using (executeQuery)
@@ -240,7 +240,7 @@ namespace baza_danych_azure
         {
             try
             {
-                string query = "delete from krotkie_wiadomosci where login_odbiorcy=@login";
+                string query = "delete from wiadomosci where login_odbiorcy=@login";
                 SqlCommand executeQuery = new SqlCommand(query, cnn);
                 executeQuery.Parameters.AddWithValue("login", login);
                 executeQuery.ExecuteNonQuery();
@@ -258,7 +258,7 @@ namespace baza_danych_azure
                 termin_waznosci = DateTime.Now.AddDays(3);
             }
 
-            string query = "INSERT INTO krotkie_wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci,czas_wyslania) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci,@czas_wyslania)";
+            string query = "INSERT INTO wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci,czas_wyslania) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci,@czas_wyslania)";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login_wysylajacego", login_wysylajacego);
             executeQuery.Parameters.AddWithValue("login_odbiorcy", login_odbiorcy);
