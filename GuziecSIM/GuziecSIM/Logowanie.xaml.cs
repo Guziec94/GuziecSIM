@@ -27,7 +27,7 @@ namespace GuziecSIM
             _login = null;
             _klucz = new klucze();
 
-            baza_danych.polacz_z_baza();
+            //baza_danych.polacz_z_baza();
         }
 
         /* [WCZYTYWANIE PLIKU Z KLUCZEM PRYWATNYM DO ZALOGOWANIA] */

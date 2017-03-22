@@ -40,6 +40,10 @@ namespace GuziecSIM
             okno.Style = (Style)Application.Current.Resources["listboxBezPodswietlen"];
             kontakty.Style = (Style)Application.Current.Resources["listboxBezPodswietlen"];
 
+            // DO PRZYCISKOW DODANYCH STATYCZNIE DODAJEMY STYLE
+            button1_Copy2.Style = (Style)Application.Current.Resources["ladnyPrzyciskStyle"];
+            button1.Style = (Style)Application.Current.Resources["ladnyPrzyciskStyle"];
+
             // UMOZLIWIAMY BY POLE TEKSTOWE NA NOWA WIADOMOSC MOGLO PRZECHOWYWAC TEKST WIELOLINIOWY
             textBox.TextWrapping = TextWrapping.Wrap;
             textBox.AcceptsReturn = true;
@@ -98,6 +102,9 @@ namespace GuziecSIM
         /* [FUNKCJA UKAZUJACA LISTĘ KONTAKTÓW OTRZYMANA W POSTACI LISTY] */
         public void pokazListeKontaktow(List<Uzytkownik> lista)
         {
+            // CZYSCIMY OKNO Z LISTA ZNAJOMYCH BY MOC JA POTEM UAKTUALNIC
+            kontakty.Items.Clear();
+
             foreach (var kontakt in lista)
             {
                 // KAZDEGO UZYTKOWNIKA NA LISCIE ZNAJOMCH OPISUJE POJEDYNCZY GROUPBOX KTOREGO ZAWARTOSC TO LISTA DANYCH TAKICH JAK: LOGIN, IMIE, OPIS I PRZYCISK USUWAJACY TEGO ZNAJOMEGO Z LISTY
@@ -186,6 +193,31 @@ namespace GuziecSIM
             // JESLI AKTUALNIE OTWARTA BYLA KONWERSACJA Z OSOBA KTORA USUWAMY Z LISTY ZNAJOMYCH TO KONWERSACJE ZAMYKAMY KORZYSTAJAC ZE ZDEFINIOWANEGO WCZESNIEJ EVENTU
             if (infoKonf.Content.ToString() == uzytkownikDoUsuniecia)
                 button1_Copy1_Click(null, null);
+            else
+            {
+                // NA LISCIE ZNAJOMYCH ZNAJDUJEMY USUWANEGO UZYTKOWNIKA I KOLOR JEGO LOGINU ZMIENIAMY SPOWEROTEM NA CZARNY
+                foreach (var kontakt in kontakty.Items)
+                {
+                    TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                    if (login.Text == uzytkownikDoUsuniecia) { login.Foreground = Brushes.Black; break; }
+                }
+
+                // USUWAMY Z ARCHIWUM WIADOMOSCI ZWIAZANE Z UZYTKOWNIKIEM KTOREGO USUWAMY
+                for (int i = 0; i < archiwum.Count; i++)
+                {
+                    if (archiwum[i].odbiorca == uzytkownikDoUsuniecia || archiwum[i].nadawca == uzytkownikDoUsuniecia)
+                    {
+                        archiwum.Remove(archiwum[i--]);
+                        if (i < -1) i = -1;
+                    }
+                }
+            }
+
+            // USUWAMY UZYTKOWNIKA Z LISTY ZAWIERAJACEJ ZNAJOMYCH
+            lista.Remove(lista.Find(x => x.login == uzytkownikDoUsuniecia));
+
+            // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
+            pokazListeKontaktow(lista);
 
             // UZYTKOWNIK O ODEBRANYM LOGINIE JEST USUWANY Z BAZY DANYCH Z LISTY ZNAJOMYCH ZALOGOWANEGO UZYTKOWNIKA
             MessageBox.Show("Usuńcie tego użytkownika ze znajomych zalogowanego");
@@ -284,6 +316,7 @@ namespace GuziecSIM
             // UAKTYWNIAMY POLE TEKSTOWE NA TRESC NOWEJ WIADOMOSCI ORAZ PRZYCISK UMOZLIWIAJACY JEJ WYSLANIE
             textBox.IsEnabled = true;
             button1.IsEnabled = true;
+            button1_Copy2.IsEnabled = true;
 
             // UKAZUJEMY PRZYCISK ZMINIMALIZOWANIA ORAZ ZAMKNIECIA OTWARTEJ KONWERSACJI
             button1_Copy.Visibility = Visibility.Visible;
@@ -306,6 +339,9 @@ namespace GuziecSIM
             // CZYSCIMY POLE TEKSTOWE Z TRESCI WYSLANEJ JUZ WIADOMOSCI ORAZ ODSWIEZAMY OKNO KONWERSACJI UWZGLEDNIAJAC JUZ WYSLANA WIADOMOSC DODANA DO ARCHIWUM
             textBox.Clear();
             pokazWiadom(nowa.odbiorca);
+
+            // PO WYSLANIU WIADOMOSCI TWORZYMY OBIEKT NOWEJ BY BYL GOTOWY NA WYSLANIE NASTEPNEJ - ODBIORCA JEST TEN SAM
+            nowa = new Wiadomosc() { nadawca = _login, odbiorca = nowa.odbiorca };
         }
 
         /* [ZMINIMALIZOWANIE OKNA ROZMOWY] */
@@ -321,6 +357,7 @@ namespace GuziecSIM
             // BLOKUJEMY MOZLIWOSC WYSLANIA NOWEJ WIADOMOSCI
             textBox.IsEnabled = false;
             button1.IsEnabled = false;
+            button1_Copy2.IsEnabled = false;
             nowa = null;
 
             // CHOWAMY PRZYCISKI ODPOWIEDZIALNE ZA MINIMALIZOWANIE I ZAMYKANIE KONWERSACJI
@@ -358,6 +395,7 @@ namespace GuziecSIM
             // UNIEMOZLIWIAMY WYSLANIE NOWYCH WIADOMOSCI
             textBox.IsEnabled = false;
             button1.IsEnabled = false;
+            button1_Copy2.IsEnabled = false;
             nowa = null;
 
             // CHOWAMY PRZYCISKI ODPOWIEDZIALNE ZA MINIMALIZOWANIE I ZAMYKANIE KONWERSACJI
@@ -418,6 +456,11 @@ namespace GuziecSIM
         private void btnDod_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Tutaj dodamy kontakt");
+        }
+
+        private void button1_Copy2_Click(object sender, RoutedEventArgs e)
+        {
+            button1_Copy2.Content = "Abc";
         }
     }
 }
