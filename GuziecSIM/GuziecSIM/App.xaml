@@ -7,14 +7,14 @@
         <Style x:Key="listboxBezPodswietlen" TargetType="{x:Type ListBox}">
             <Style.Resources>
                 <Style TargetType="ListBoxItem">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <ContentPresenter/>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
             </Style.Resources>
         </Style>
         <Style x:Key="ladnyPrzyciskStyle" TargetType="Button">

@@ -7,6 +7,8 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using baza_danych_azure;
 using klasa_zabezpieczen;
+using System.Windows.Media.Imaging;
+using System.Windows.Documents;
 
 namespace GuziecSIM
 {
@@ -59,7 +61,7 @@ namespace GuziecSIM
             lista = baza_danych.pobierz_liste_kontaktow(_login);
 
             // JEZELI UZYTKOWNIK POSIADA JAKICHS ZNAJOMYCH (POBRANA LISTA NIE JEST PUSTA) WYSWIETLAMY ICH
-            if (lista != null) pokazListeKontaktow(lista);
+            if (lista != null) pokazListeKontaktow(lista, new List<string>());
 
             // ROZPOCZYNAMY RAPORTOWANIE BAZY DANYCH O WPROWADZONYCH W NIEJ ZMIANACH
             baza_danych.broker();
@@ -78,7 +80,6 @@ namespace GuziecSIM
             {
                 // POBIERAMY NOWYCH WIADOMOSCI ZWIAZANYCH Z ZALOGOWANYM UZYTKOWNIKIEM Z BAZY DANYCH
                 List<Wiadomosc> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
-
                 if (wiadomosci != null)
                 {
                     foreach (Wiadomosc w in wiadomosci)
@@ -89,7 +90,7 @@ namespace GuziecSIM
                         // ZNAJDUJEMY NA LISCIE ZNAJOMYCH NADAWCE WIADOMOSCI I JEGO KOLOR JEGO LOGINU ZMIENIAMY NA CZERWONY I ODSWIEZAMY OKNO KONWERSACJI JESLI NOWE WIADOMOSCI NALEZALY DO OSOBY Z KTORA AKTUALNIE ROZMAWIAL UZYTKOWNIK
                         foreach (var kontakt in kontakty.Items)
                         {
-                            TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                            Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
                             if (login.Text == w.nadawca)
                             {
                                 login.Foreground = Brushes.Red;
@@ -105,88 +106,95 @@ namespace GuziecSIM
         }
 
         /* [FUNKCJA UKAZUJACA LISTĘ KONTAKTÓW OTRZYMANA W POSTACI LISTY] */
-        public void pokazListeKontaktow(List<Uzytkownik> lista)
+        public void pokazListeKontaktow(List<Uzytkownik> lista, List<string> online)
         {
-            // CZYSCIMY OKNO Z LISTA ZNAJOMYCH BY MOC JA POTEM UAKTUALNIC
-            kontakty.Items.Clear();
-
-            foreach (var kontakt in lista)
+            Application.Current.Dispatcher.Invoke((Action)delegate
             {
-                // KAZDEGO UZYTKOWNIKA NA LISCIE ZNAJOMCH OPISUJE POJEDYNCZY GROUPBOX KTOREGO ZAWARTOSC TO LISTA DANYCH TAKICH JAK: LOGIN, IMIE, OPIS I PRZYCISK USUWAJACY TEGO ZNAJOMEGO Z LISTY
-                GroupBox group = new GroupBox();
-                ListBox list = new ListBox();
-                group.Content = list;
+                // CZYSCIMY OKNO Z LISTA ZNAJOMYCH BY MOC JA POTEM UAKTUALNIC
+                kontakty.Items.Clear();
 
-                // KOLEJNO: USUWAMY OBRAMOWANIE DLA DANYCH UZYTKOWNIKA ZNAJDUJACYCH SIE WEWNATRZ GROUPBOXA, BLOKUJEMY MOZLIWOSC POJAWIENIA SIE POZIOMEGO PASKA PRZEWIJANIA, ORAZ NADAJEMY STYL DZIEKI KTOREMU SKLADOWE DANYCH UZYTKOWNIKA PO NAJECHANIU NIE BEDA PODSWIETLANE
-                list.BorderThickness = new Thickness(0);
-                list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-                list.Style = (Style)Application.Current.Resources["listboxBezPodswietlen"];
+                foreach (var kontakt in lista)
+                {
+                    // KAZDEGO UZYTKOWNIKA NA LISCIE ZNAJOMCH OPISUJE POJEDYNCZY GROUPBOX KTOREGO ZAWARTOSC TO LISTA DANYCH TAKICH JAK: LOGIN, IMIE, OPIS I PRZYCISK USUWAJACY TEGO ZNAJOMEGO Z LISTY
+                    GroupBox group = new GroupBox();
+                    ListBox list = new ListBox();
+                    group.Content = list;
 
-                // KOLEJNO: NADAJEMY SZYROKOSC GENEROWANEGO GROUPBOXA DLA DANEGO ZNAJOMEGO, ZMIENIAMY KOLOR JEGO OBRAMOWANIA NA JASNO-SZARY, USTAWIAMY JEGO OBRAMOWANIE NA TYLKO DOLNE (SEPARUJACE ZNAJOMYCH), DEFINIUJEMY PODPOWIEDZ PO NAJECHANIU NA ELEMENT ZNAJOMEGO
-                group.Width = 220;
-                group.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
-                group.BorderThickness = new Thickness(0, 0, 0, 1);
-                group.ToolTip = "Dwukrotne kliknięcie LPM rozpocznie konwersację";
+                    // KOLEJNO: USUWAMY OBRAMOWANIE DLA DANYCH UZYTKOWNIKA ZNAJDUJACYCH SIE WEWNATRZ GROUPBOXA, BLOKUJEMY MOZLIWOSC POJAWIENIA SIE POZIOMEGO PASKA PRZEWIJANIA, ORAZ NADAJEMY STYL DZIEKI KTOREMU SKLADOWE DANYCH UZYTKOWNIKA PO NAJECHANIU NIE BEDA PODSWIETLANE
+                    list.BorderThickness = new Thickness(0);
+                    list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+                    list.Style = (Style)Application.Current.Resources["listboxBezPodswietlen"];
 
-                // DODAJEMY I STYLUJEMY ELEMENT BEDACY LOGINEM ZNAJOMEGO
-                TextBlock login = new TextBlock();
+                    // KOLEJNO: NADAJEMY SZYROKOSC GENEROWANEGO GROUPBOXA DLA DANEGO ZNAJOMEGO, ZMIENIAMY KOLOR JEGO OBRAMOWANIA NA JASNO-SZARY, USTAWIAMY JEGO OBRAMOWANIE NA TYLKO DOLNE (SEPARUJACE ZNAJOMYCH), DEFINIUJEMY PODPOWIEDZ PO NAJECHANIU NA ELEMENT ZNAJOMEGO
+                    group.Width = 220;
+                    group.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
+                    group.BorderThickness = new Thickness(0, 0, 0, 1);
+                    group.ToolTip = "Dwukrotne kliknięcie LPM rozpocznie konwersację";
 
-                login.Text = kontakt.login;
-                login.Foreground = Brushes.Black;
-                login.FontSize = 12;
-                
-                login.Margin = new Thickness(0, 6, 0, 0);
+                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY LOGINEM ZNAJOMEGO
+                    TextBlock login = new TextBlock();
 
-                // DODAJEMY I STYLUJEMY ELEMENT BEDACY IMIENIEM ZNAJOMEGO
-                TextBlock imie = new TextBlock();
+                    //login.Text = kontakt.login;
+                    login.Foreground = Brushes.Black;
+                    login.FontSize = 12;
 
-                imie.Foreground = Brushes.Gray;
-                imie.FontSize = 10;
-                imie.Text = kontakt.imie;
-                imie.Margin = new Thickness(0, 0, 0, 0);
+                    login.Margin = new Thickness(0, 6, 0, 0);
 
-                // DODAJEMY I STYLUJEMY ELEMENT BEDACY OPISEM ZNAJOMEGO
-                TextBlock opis = new TextBlock();
+                    //// OBOK LOGINU DODAJEMY KOLOROWE KOLKO SYGNALIZUJACE STATUS ZNAJOMEGO JESLI ZNAJDUJE SIE ON NA LISCIE ONLINE
+                    login.Inlines.Add(new Run(kontakt.login));
+                    login.Inlines.Add(new Run(" ✩") { Foreground = online.Contains(kontakt.login) ? new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118)) : Brushes.DarkOrange, FontSize = 10 });
 
-                opis.Foreground = Brushes.LightGray;
-                opis.FontSize = 10;
-                opis.Text = kontakt.opis;
-                opis.TextWrapping = TextWrapping.WrapWithOverflow;
-                opis.Margin = new Thickness(0, 6, 0, 0);
+                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY IMIENIEM ZNAJOMEGO
+                    TextBlock imie = new TextBlock();
 
-                // DODAJEMY I STYLUJEMY ELEMENT BEDACY PRZYCISKIEM USUWAJACYM ZNAJOMEGO
-                Button btnUsun = new Button();
+                    imie.Foreground = Brushes.Gray;
+                    imie.FontSize = 10;
+                    imie.Text = kontakt.imie;
+                    imie.Margin = new Thickness(0, 0, 0, 0);
 
-                btnUsun.BorderThickness = new Thickness(1, 0, 0, 1);
-                btnUsun.Margin = new Thickness(0, 6, 0, 0);
+                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY OPISEM ZNAJOMEGO
+                    TextBlock opis = new TextBlock();
 
-                btnUsun.HorizontalAlignment = HorizontalAlignment.Left;
-                btnUsun.Width = 40;
+                    opis.Foreground = Brushes.LightGray;
+                    opis.FontSize = 10;
+                    opis.Text = kontakt.opis;
+                    opis.TextWrapping = TextWrapping.WrapWithOverflow;
+                    opis.Margin = new Thickness(0, 6, 0, 0);
 
-                btnUsun.Style = (Style)Application.Current.Resources["ladnyPrzyciskStyle"];
-                btnUsun.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
-                btnUsun.Cursor = Cursors.Hand;
-                btnUsun.FontSize = 10;
+                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY PRZYCISKIEM USUWAJACYM ZNAJOMEGO
+                    Button btnUsun = new Button();
 
-                btnUsun.Content = " Usuń ";
-                btnUsun.ToolTip = "Kliknięcie spowoduje usunięcie znajomego";
+                    btnUsun.BorderThickness = new Thickness(1, 0, 0, 1);
+                    btnUsun.Margin = new Thickness(0, 6, 0, 0);
 
-                btnUsun.Click += BtnUsun_Click;
-                btnUsun.Name = login.Text;
+                    btnUsun.HorizontalAlignment = HorizontalAlignment.Left;
+                    btnUsun.Width = 40;
 
-                // WSZYSTKIE 3 ELEMENTY OPISUJACE ZNAJOMEGO ORAZ BUTTON USUWAJACY GO DODAJEMY DO LISTY BEDACEJ SZKIELETEM GROUPBOXA PRZYPISANEGO DO DANEGO UZYTKOWNIKA
-                list.Items.Add(login);
-                list.Items.Add(imie);
-                list.Items.Add(opis);
-                list.Items.Add(btnUsun);
+                    btnUsun.Style = (Style)Application.Current.Resources["ladnyPrzyciskStyle"];
+                    btnUsun.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
+                    btnUsun.Cursor = Cursors.Hand;
+                    btnUsun.FontSize = 10;
 
-                // GENEROWANEMU GROUPBOXOWI NADAJEMY IDENTYFIKATOR BEDACY LOGINEM DANEGO ZNAJOMEGO DZIEKI CZEMU BEDZIEMY MOGLI UZYSKAC INFORMACJE O TYM JAKIEGO ZNAJOMEGO GROUPBOX KLIKNIETO W OBSLUDZE EVENTU ZDEFINIOWANEGO PONIZEJ
-                group.Name = login.Text;
-                group.MouseDoubleClick += Group_MouseDoubleClick;
+                    btnUsun.Content = " Usuń ";
+                    btnUsun.ToolTip = "Kliknięcie spowoduje usunięcie znajomego";
 
-                // DODAJEMY GROUPBOX UZUPELNIONY DANYMI ZNAJOMEGO DO LISTY KONTAKTOW
-                kontakty.Items.Add(group);
-            }
+                    btnUsun.Click += BtnUsun_Click;
+                    btnUsun.Name = (login.Inlines.FirstInline as Run).Text;
+
+                    // WSZYSTKIE 3 ELEMENTY OPISUJACE ZNAJOMEGO ORAZ BUTTON USUWAJACY GO DODAJEMY DO LISTY BEDACEJ SZKIELETEM GROUPBOXA PRZYPISANEGO DO DANEGO UZYTKOWNIKA
+                    list.Items.Add(login);
+                    list.Items.Add(imie);
+                    list.Items.Add(opis);
+                    list.Items.Add(btnUsun);
+
+                    // GENEROWANEMU GROUPBOXOWI NADAJEMY IDENTYFIKATOR BEDACY LOGINEM DANEGO ZNAJOMEGO DZIEKI CZEMU BEDZIEMY MOGLI UZYSKAC INFORMACJE O TYM JAKIEGO ZNAJOMEGO GROUPBOX KLIKNIETO W OBSLUDZE EVENTU ZDEFINIOWANEGO PONIZEJ
+                    group.Name = (login.Inlines.FirstInline as Run).Text;
+                    group.MouseDoubleClick += Group_MouseDoubleClick;
+
+                    // DODAJEMY GROUPBOX UZUPELNIONY DANYMI ZNAJOMEGO DO LISTY KONTAKTOW
+                    kontakty.Items.Add(group);
+                }
+            });      
         }
 
         /* [FUNKCJA USUWAJACA UZYTKOWNIKA Z LISTY ZAJOMYCH] */
@@ -205,7 +213,7 @@ namespace GuziecSIM
                     // NA LISCIE ZNAJOMYCH ZNAJDUJEMY USUWANEGO UZYTKOWNIKA I KOLOR JEGO LOGINU ZMIENIAMY SPOWEROTEM NA CZARNY
                     foreach (var kontakt in kontakty.Items)
                     {
-                        TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                        Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
                         if (login.Text == uzytkownikDoUsuniecia) { login.Foreground = Brushes.Black; break; }
                     }
 
@@ -224,7 +232,7 @@ namespace GuziecSIM
                 lista.Remove(lista.Find(x => x.login == uzytkownikDoUsuniecia));
 
                 // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
-                pokazListeKontaktow(lista);
+                pokazListeKontaktow(lista, new List<string>());
 
                 // UZYTKOWNIK O ODEBRANYM LOGINIE JEST USUWANY Z BAZY DANYCH Z LISTY ZNAJOMYCH ZALOGOWANEGO UZYTKOWNIKA
                 baza_danych.lista_kontaktow_do_xml(lista, _login);
@@ -321,7 +329,7 @@ namespace GuziecSIM
             // JEZELI FUNKCJA WYWOLANA ZOSTALA POPRZEZ WYBRANIE ZNAJOMEGO DO KONWERSACJI - ZMIENIAMY KOLOR JEGO LOGINU NA LISCIE ZNAJOMYCH NA ZIELONY
             if ((sender as GroupBox).Content != null)
             {
-                TextBlock login = ((sender as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                Run login = (((sender as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
                 login.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)111, (byte)163, (byte)99));
             }
 
@@ -383,7 +391,7 @@ namespace GuziecSIM
             // NA LISCIE ZNAJOMYCH ZNAJDUJEMY UZYTKOWNIKA Z AKTUALNIE OTWARTEJ KONWERSACJI I KOLOR JEGO LOGINU ZMIENIAMY SPOWEROTEM NA CZARNY
             foreach (var kontakt in kontakty.Items)
             {
-                TextBlock login = ((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock;
+                Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
                 if (login.Text == infoKonf.Content.ToString()) { login.Foreground = Brushes.Black; break; }
             }
 
@@ -400,7 +408,7 @@ namespace GuziecSIM
             // CHOWAMY INFORMACJE NA TEMAT OTWARTEJ KONWERSACJI
             infoKonf.Content = string.Empty;
 
-            // CZYWSCIMY OKNO Z OTWARTA KONWERSACJA ORAZ POLE TEKSTOWE NA NOWA WIADOMOSC
+            // CZYSCIMY OKNO Z OTWARTA KONWERSACJA ORAZ POLE TEKSTOWE NA NOWA WIADOMOSC
             okno.Items.Clear();
             textBox.Clear();
 
@@ -469,9 +477,6 @@ namespace GuziecSIM
         private void btnDod_Click(object sender, RoutedEventArgs e)
         {
             PanelDodawaniaZnajomego inputDialog = new PanelDodawaniaZnajomego();
-
-            //inputDialog.Owner = Window.GetWindow(this);
-            //inputDialog.Topmost = true;
 
             if (inputDialog.ShowDialog() == true)
             {
