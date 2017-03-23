@@ -64,12 +64,15 @@ namespace GuziecSIM
             lista = baza_danych.pobierz_liste_kontaktow(_login);
 
             // JEZELI UZYTKOWNIK POSIADA JAKICHS ZNAJOMYCH (POBRANA LISTA NIE JEST PUSTA) WYSWIETLAMY ICH
-            if (lista != null) pokazListeKontaktow(lista, new List<string>());
+            if (lista != null)
+                pokazListeKontaktow(lista, baza_danych.dostepni_uzytkownicy());
+
+            baza_danych.rozglos_logowanie();
 
             // ROZPOCZYNAMY RAPORTOWANIE BAZY DANYCH O WPROWADZONYCH W NIEJ ZMIANACH
             baza_danych.broker();
             wczytaj_wiadomosci();
-            if(archiwum.Count>0)
+            if (archiwum.Count > 0)
             {
                 System.Media.SystemSounds.Beep.Play();
             }
@@ -94,6 +97,7 @@ namespace GuziecSIM
                         foreach (var kontakt in kontakty.Items)
                         {
                             Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
+                            pokazWiadom(login.Text);
                             if (login.Text == w.nadawca)
                             {
                                 login.Foreground = Brushes.Red;
@@ -197,7 +201,7 @@ namespace GuziecSIM
                     // DODAJEMY GROUPBOX UZUPELNIONY DANYMI ZNAJOMEGO DO LISTY KONTAKTOW
                     kontakty.Items.Add(group);
                 }
-            });      
+            });
         }
 
         /* [FUNKCJA USUWAJACA UZYTKOWNIKA Z LISTY ZAJOMYCH] */
@@ -235,7 +239,7 @@ namespace GuziecSIM
                 lista.Remove(lista.Find(x => x.login == uzytkownikDoUsuniecia));
 
                 // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
-                pokazListeKontaktow(lista, new List<string>());
+                pokazListeKontaktow(lista, baza_danych.dostepni_uzytkownicy());
 
                 // UZYTKOWNIK O ODEBRANYM LOGINIE JEST USUWANY Z BAZY DANYCH Z LISTY ZNAJOMYCH ZALOGOWANEGO UZYTKOWNIKA
                 baza_danych.lista_kontaktow_do_xml(lista, _login);
@@ -254,7 +258,7 @@ namespace GuziecSIM
 
                 // CZYSCIMY OKNO KONWERSACJI
                 okno.Items.Clear();
-     
+
                 foreach (var wiadomosc in archiwum)
                 {
                     // WYSWIETLAMY TYLKO TE WIADOMOSCI Z ARCHIWUM KTORE DOTYCZA ROZMOWY Z WYBRANYM WCZESNIEJ DO KONWERSACJI ZNAJOMYM
@@ -433,9 +437,10 @@ namespace GuziecSIM
             Application.Current.MainWindow.Title = "GuziecSIM";
 
             // ZATRZYMUJEMY WYKONYWANE PRZEZ BAZE DANYCH
+            baza_danych.rozglos_logowanie();
             baza_danych.usunAdresIP(_login);
             baza_danych.broker_stop();
-            
+
             // PRZEKIEROWUJEMY UZYTKOWNIKA SPOWROTEM NA STORNE LOGOWANIA
             Logowanie logowanie = new Logowanie();
             NavigationService nav = NavigationService.GetNavigationService(this);

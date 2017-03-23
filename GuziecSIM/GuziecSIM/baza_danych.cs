@@ -57,18 +57,63 @@ namespace baza_danych_azure
 
         private static void SqlDependencyOnChange(object sender, SqlNotificationEventArgs eventArgs)
         {
-            broker();
             if (eventArgs.Info == SqlNotificationInfo.Invalid)
             {
                 Console.WriteLine("The above notification query is not valid.");
             }
             else
             {
-                if (eventArgs.Info.ToString() == "Insert")
+                if (eventArgs.Info.ToString() == "Update")
                 {
-                    System.Media.SystemSounds.Beep.Play();
-                    Logowanie.cos.wczytaj_wiadomosci();//wywolanie funkcji wczytujacej wiadomosci
+                    string query = "SELECT [nowa_wiadomosc],[nowy_oczekujacy],[przeladuj_kontakty],[sprawdz_dostepnosc] FROM dbo.lista_zdarzen where login = @login";
+                    SqlCommand executeQuery = new SqlCommand(query, cnn);
+                    executeQuery.Parameters.AddWithValue("login", Logowanie._login);
+                    using (executeQuery)
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            bool if1 = readerQuery.GetSqlBoolean(0) == true ? true : false;
+                            bool if2 = readerQuery.GetSqlBoolean(1) == true ? true : false;
+                            bool if3 = readerQuery.GetSqlBoolean(2) == true ? true : false;
+                            bool if4 = readerQuery.GetSqlBoolean(3) == true ? true : false;
+                            readerQuery.Close();
+                            if (if1)//nowa wiadomosc
+                            {
+                                System.Media.SystemSounds.Beep.Play();
+                                Logowanie.cos.wczytaj_wiadomosci();//wywolanie funkcji wczytujacej wiadomosci
+                                query = "update lista_zdarzen set nowa_wiadomosc=0 where login = @login";//wyzerowanie eventu
+                                SqlCommand updateQuery = new SqlCommand(query, cnn);
+                                updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+                                updateQuery.ExecuteNonQueryAsync();
+                            }
+                            if (if2)//oczekujaca prosba o dodanie do znajomych
+                            {
+                                query = "update lista_zdarzen set nowy_oczekujacy=0 where login = @login";//wyzerowanie eventu
+                                SqlCommand updateQuery = new SqlCommand(query, cnn);
+                                updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+                                updateQuery.ExecuteNonQueryAsync();
+                            }
+                            if (if3)//ktos zniknal z listy kontaktow - trzeba przeladowac
+                            {
+                                Logowanie.cos.pokazListeKontaktow(pobierz_liste_kontaktow(Logowanie._login), dostepni_uzytkownicy());
+                                query = "update lista_zdarzen set przeladuj_kontakty=0 where login = @login";//wyzerowanie eventu
+                                SqlCommand updateQuery = new SqlCommand(query, cnn);
+                                updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+                                updateQuery.ExecuteNonQueryAsync();
+                            }
+                            if (if4)//zmiana statusu dostepnosci z listy kontaktow
+                            {
+                                Logowanie.cos.pokazListeKontaktow(Logowanie.cos.lista, dostepni_uzytkownicy());
+                                query = "update lista_zdarzen set sprawdz_dostepnosc=0 where login = @login";//wyzerowanie eventu
+                                SqlCommand updateQuery = new SqlCommand(query, cnn);
+                                updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+                                updateQuery.ExecuteNonQueryAsync();
+                            }
+                        }
+                    }
                 }
+                broker();
             }
         }
 
@@ -558,6 +603,40 @@ namespace baza_danych_azure
                 {
                     MessageBox.Show("Wystąpił nieoczekiwany błąd!");
                 }
+        }
+
+        public static List<string> dostepni_uzytkownicy()
+        {
+            List<string> wszyscy_dostepni = new List<string>();
+            string query = "SELECT login FROM dostepni_uzytkownicy";
+            SqlCommand readQuery = new SqlCommand(query, cnn);
+            using (SqlDataReader loginReaderQuery = readQuery.ExecuteReader())
+            {
+                while (loginReaderQuery.Read())
+                {
+                    wszyscy_dostepni.Add(loginReaderQuery.GetString(0));
+                }
+            }
+            var kontakty = pobierz_liste_kontaktow(Logowanie._login);
+            return kontakty.Select(x => x.login).Intersect(wszyscy_dostepni).ToList();
+        }
+
+        public static void rozglos_logowanie()
+        {
+            List<string> zalogowani_uzytkownicy = dostepni_uzytkownicy();
+            string query = "update lista_zdarzen set sprawdz_dostepnosc=1 where login in (@loginy)";
+            string loginy = "";
+            foreach (var uzytkownik in zalogowani_uzytkownicy)
+            {
+                loginy += uzytkownik + ",";
+            }
+            if (loginy != "")
+            {
+                loginy = loginy.Remove(loginy.Length - 1);
+                SqlCommand update = new SqlCommand(query, cnn);
+                update.Parameters.AddWithValue("loginy", loginy);
+                update.ExecuteNonQuery();
+            }
         }
     }
 }
