@@ -238,15 +238,15 @@ namespace GuziecSIM
                 // USUWAMY UZYTKOWNIKA Z LISTY ZAWIERAJACEJ ZNAJOMYCH
                 lista.Remove(lista.Find(x => x.login == uzytkownikDoUsuniecia));
 
-                // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
-                pokazListeKontaktow(lista, baza_danych.dostepni_uzytkownicy());
-
                 // UZYTKOWNIK O ODEBRANYM LOGINIE JEST USUWANY Z BAZY DANYCH Z LISTY ZNAJOMYCH ZALOGOWANEGO UZYTKOWNIKA
-                baza_danych.lista_kontaktow_do_xml(lista, _login);
+                baza_danych.lista_kontaktow_do_xml(lista, _login, false);
                 List<Uzytkownik> lista_usuwanego = new List<Uzytkownik>();
                 lista_usuwanego = baza_danych.pobierz_liste_kontaktow(uzytkownikDoUsuniecia);
                 lista_usuwanego.Remove(lista_usuwanego.Find(x => x.login == _login));
-                baza_danych.lista_kontaktow_do_xml(lista_usuwanego, uzytkownikDoUsuniecia);
+                baza_danych.lista_kontaktow_do_xml(lista_usuwanego, uzytkownikDoUsuniecia, true);
+
+                // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
+                pokazListeKontaktow(lista, baza_danych.dostepni_uzytkownicy());
             }
         }
 
@@ -488,11 +488,23 @@ namespace GuziecSIM
 
             if (inputDialog.ShowDialog() == true)
             {
-                if(baza_danych.czyLoginIstnieje(inputDialog.Znajomy))
+                if (inputDialog.Znajomy != _login)
                 {
-                    baza_danych.dodajDoListyOczekujacych(_login, inputDialog.Znajomy);
+                    if (baza_danych.czyLoginIstnieje(inputDialog.Znajomy))
+                    {
+                        if (baza_danych.sprawdzListeKontaktow(_login, inputDialog.Znajomy, lista))
+                        {
+                            MessageBox.Show("Zaproszenie zostało wysłane.");
+                            baza_danych.dodajDoListyOczekujacych(_login, inputDialog.Znajomy);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Masz już użytkownika " + inputDialog.Znajomy + " na liscie kontaktów lub zaproszenie czeka na decyzje użytkownika!");
+                        }
+                    }
+                    else MessageBox.Show("Użytkownik o nazwie '" + inputDialog.Znajomy + "' nie istnieje");
                 }
-                else MessageBox.Show("Użytkownik o nazwie '" + inputDialog.Znajomy + "' nie istnieje");
+                else MessageBox.Show("Nie możesz dodawać samego siebie.");
             }
         }
 

@@ -47,7 +47,7 @@ namespace baza_danych_azure
                 SqlDependency.Start(connectionString);
                 var _connection = new SqlConnection(connectionString);
                 _connection.Open();
-                SqlCommand _sqlCommand = new SqlCommand("SELECT [tresc] FROM dbo.wiadomosci where login_odbiorcy = @login", _connection);
+                SqlCommand _sqlCommand = new SqlCommand("SELECT [nowa_wiadomosc],[nowy_oczekujacy],[przeladuj_kontakty],[sprawdz_dostepnosc] FROM dbo.lista_zdarzen where login = @login", _connection);
                 _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
                 _sqlCommand.Notification = null;
                 dependency = new SqlDependency(_sqlCommand);
@@ -85,22 +85,47 @@ namespace baza_danych_azure
                                 query = "update lista_zdarzen set nowa_wiadomosc=0 where login = @login";//wyzerowanie eventu
                                 SqlCommand updateQuery = new SqlCommand(query, cnn);
                                 updateQuery.Parameters.AddWithValue("login", Logowanie._login);
-                                updateQuery.ExecuteNonQueryAsync();
+                                updateQuery.ExecuteNonQuery();
                             }
                             if (if2)//oczekujaca prosba o dodanie do znajomych
                             {
+                                int queryResult = 0;
+                                query = "SELECT status FROM oczekujacy_znajomi WHERE (login_dodawanego = @login AND status = 1) OR (login_dodajacego = @login AND (status = 3 OR status = 4))";
+                                SqlCommand execute = new SqlCommand(query, cnn);
+                                execute.Parameters.AddWithValue("login", Logowanie._login);
+                                execute.ExecuteNonQuery();
+                                using (execute)
+                                {
+                                    using (SqlDataReader readerStatus = execute.ExecuteReader())
+                                    {
+                                        if (readerStatus.Read())
+                                        {
+                                            queryResult = readerStatus.GetInt32(0);
+                                        }
+                                    }
+                                }
+                                
+                                if(queryResult == 1)
+                                {
+                                    czyKtosChceDodacDoListy(Logowanie._login);
+                                }
+                                if(queryResult == 3 || queryResult == 4)
+                                {
+                                    powiadomOStatusieDodawania(Logowanie._login);
+                                }
                                 query = "update lista_zdarzen set nowy_oczekujacy=0 where login = @login";//wyzerowanie eventu
                                 SqlCommand updateQuery = new SqlCommand(query, cnn);
                                 updateQuery.Parameters.AddWithValue("login", Logowanie._login);
-                                updateQuery.ExecuteNonQueryAsync();
+                                updateQuery.ExecuteNonQuery();
                             }
                             if (if3)//ktos zniknal z listy kontaktow - trzeba przeladowac
                             {
-                                Logowanie.cos.pokazListeKontaktow(pobierz_liste_kontaktow(Logowanie._login), dostepni_uzytkownicy());
+                                Logowanie.cos.lista = pobierz_liste_kontaktow(Logowanie._login);
+                                Logowanie.cos.pokazListeKontaktow(Logowanie.cos.lista, dostepni_uzytkownicy());
                                 query = "update lista_zdarzen set przeladuj_kontakty=0 where login = @login";//wyzerowanie eventu
                                 SqlCommand updateQuery = new SqlCommand(query, cnn);
                                 updateQuery.Parameters.AddWithValue("login", Logowanie._login);
-                                updateQuery.ExecuteNonQueryAsync();
+                                updateQuery.ExecuteNonQuery();
                             }
                             if (if4)//zmiana statusu dostepnosci z listy kontaktow
                             {
@@ -108,7 +133,7 @@ namespace baza_danych_azure
                                 query = "update lista_zdarzen set sprawdz_dostepnosc=0 where login = @login";//wyzerowanie eventu
                                 SqlCommand updateQuery = new SqlCommand(query, cnn);
                                 updateQuery.Parameters.AddWithValue("login", Logowanie._login);
-                                updateQuery.ExecuteNonQueryAsync();
+                                updateQuery.ExecuteNonQuery();
                             }
                         }
                     }
@@ -303,7 +328,7 @@ namespace baza_danych_azure
                 termin_waznosci = DateTime.Now.AddDays(3);
             }
 
-            string query = "INSERT INTO wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci,czas_wyslania) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci,@czas_wyslania)";
+            string query = "INSERT INTO wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci,czas_wyslania) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci,@czas_wyslania);UPDATE lista_zdarzen SET nowa_wiadomosc = 1 WHERE login = @login_odbiorcy";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login_wysylajacego", login_wysylajacego);
             executeQuery.Parameters.AddWithValue("login_odbiorcy", login_odbiorcy);
@@ -408,11 +433,20 @@ namespace baza_danych_azure
                 }
         }
 
-        public static void lista_kontaktow_do_xml(List<Uzytkownik> lista_kontaktow, string login)
+        public static void lista_kontaktow_do_xml(List<Uzytkownik> lista_kontaktow, string login, bool powiadomienie)
         {
             XmlDocument temp = new XmlDocument();
             var xml = new XElement("Lista_kontaktow", lista_kontaktow.Select(x => new XElement("kontakt", new XElement("login", x.login), new XElement("klucz_publiczny", XElement.Parse(x.kluczPub)), new XElement("imie", x.imie), new XElement("opis", x.opis))));
-            string query = "UPDATE lista_kontaktow SET kontakty = @kontakty WHERE login=@login";
+            string query = "";
+            if (powiadomienie == true)
+            {
+                query = "UPDATE lista_kontaktow SET kontakty = @kontakty WHERE login=@login; UPDATE lista_zdarzen SET przeladuj_kontakty = 1 WHERE login = @login";
+
+            }
+            else
+            {
+                query = "UPDATE lista_kontaktow SET kontakty = @kontakty WHERE login=@login";
+            }
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             executeQuery.Parameters.AddWithValue("kontakty", xml.ToString());
@@ -421,7 +455,7 @@ namespace baza_danych_azure
 
         public static void dodajDoListyOczekujacych(string loginDodajacego, string loginDodawanego)
         {
-            string query = "INSERT INTO oczekujacy_znajomi VALUES(@loginDodajacego,@loginDodawanego,1)";
+            string query = "INSERT INTO oczekujacy_znajomi VALUES(@loginDodajacego,@loginDodawanego,1); UPDATE lista_zdarzen SET nowy_oczekujacy = 1 WHERE login = @loginDodawanego";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
@@ -470,7 +504,7 @@ namespace baza_danych_azure
             {
                 try
                 {
-                    query = "UPDATE oczekujacy_znajomi SET status = 3 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+                    query = "UPDATE oczekujacy_znajomi SET status = 3 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego;UPDATE lista_zdarzen SET nowy_oczekujacy = 1 WHERE login = @loginDodajacego";
                     SqlCommand executeQuery2 = new SqlCommand(query, cnn);
                     executeQuery2 = new SqlCommand(query, cnn);
                     executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
@@ -495,7 +529,7 @@ namespace baza_danych_azure
             {
                 try
                 {
-                    query = "UPDATE oczekujacy_znajomi SET status = 4 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+                    query = "UPDATE oczekujacy_znajomi SET status = 4 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego;UPDATE lista_zdarzen SET nowy_oczekujacy = 1 WHERE login = @loginDodajacego";
                     SqlCommand executeQuery2 = new SqlCommand(query, cnn);
                     executeQuery2 = new SqlCommand(query, cnn);
                     executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
@@ -529,7 +563,6 @@ namespace baza_danych_azure
                         if (queryResult != null && queryResult2 == 3)
                         {
                             readerQuery.Close();
-                            MessageBox.Show(queryResult + " zaakceptował Twoją prośbę o dodanie do znajomych.");
                             try
                             {
                                 query = "DELETE FROM oczekujacy_znajomi WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
@@ -542,11 +575,12 @@ namespace baza_danych_azure
                             {
                                 MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
                             }
+                            Logowanie.cos.pokazListeKontaktow(Logowanie.cos.lista, dostepni_uzytkownicy());
+                            MessageBox.Show(queryResult + " zaakceptował Twoją prośbę o dodanie do znajomych.");
                         }
                         else if (queryResult != null && queryResult2 == 4)
                         {
                             readerQuery.Close();
-                            MessageBox.Show(queryResult + " odrzucił Twoją prośbę o dodanie do znajomych.");
                             try
                             {
                                 query = "DELETE FROM oczekujacy_znajomi WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
@@ -559,6 +593,7 @@ namespace baza_danych_azure
                             {
                                 MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
                             }
+                            MessageBox.Show(queryResult + " odrzucił Twoją prośbę o dodanie do znajomych.");
                         }
                     }
                 }
@@ -595,7 +630,7 @@ namespace baza_danych_azure
                             readerQuery.Close();
                             Uzytkownik dodaj = new Uzytkownik(login, klucz_pub, imie, opis);
                             lista.Add(dodaj);
-                            lista_kontaktow_do_xml(lista, loginDodajacego);
+                            lista_kontaktow_do_xml(lista, loginDodajacego, true);
                         }
                     }
                 }
@@ -636,6 +671,45 @@ namespace baza_danych_azure
                 SqlCommand update = new SqlCommand(query, cnn);
                 update.Parameters.AddWithValue("loginy", loginy);
                 update.ExecuteNonQuery();
+            }
+        }
+
+        public static bool sprawdzListeKontaktow(string loginDodajacego, string loginDodawanego, List<Uzytkownik> lista)
+        {
+            bool flaga = true;
+            string queryResult = null;
+            string query = "SELECT login_dodawanego FROM oczekujacy_znajomi WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
+            executeQuery.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            queryResult = readerQuery.GetString(0);
+                        }
+                        if (queryResult != null)
+                        {
+                            flaga = false;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                    return false;
+                }
+            Uzytkownik sprawdz = lista.Find(x => x.login == loginDodawanego);
+            if(sprawdz != null || flaga == false)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
     }
