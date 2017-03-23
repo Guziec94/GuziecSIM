@@ -120,8 +120,7 @@ namespace baza_danych_azure
                             }
                             if (if3)//ktos zniknal z listy kontaktow - trzeba przeladowac
                             {
-                                Logowanie.cos.lista = pobierz_liste_kontaktow(Logowanie._login);
-                                Logowanie.cos.pokazListeKontaktow(Logowanie.cos.lista, dostepni_uzytkownicy());
+                                Logowanie.cos.pokazListeKontaktow(dostepni_uzytkownicy());
                                 query = "update lista_zdarzen set przeladuj_kontakty=0 where login = @login";//wyzerowanie eventu
                                 SqlCommand updateQuery = new SqlCommand(query, cnn);
                                 updateQuery.Parameters.AddWithValue("login", Logowanie._login);
@@ -129,7 +128,7 @@ namespace baza_danych_azure
                             }
                             if (if4)//zmiana statusu dostepnosci z listy kontaktow
                             {
-                                Logowanie.cos.pokazListeKontaktow(Logowanie.cos.lista, dostepni_uzytkownicy());
+                                Logowanie.cos.pokazListeKontaktow(dostepni_uzytkownicy());
                                 query = "update lista_zdarzen set sprawdz_dostepnosc=0 where login = @login";//wyzerowanie eventu
                                 SqlCommand updateQuery = new SqlCommand(query, cnn);
                                 updateQuery.Parameters.AddWithValue("login", Logowanie._login);
@@ -510,15 +509,9 @@ namespace baza_danych_azure
                     executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
                     executeQuery2.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
                     executeQuery2.ExecuteNonQuery();
-                }
-                catch(Exception)
-                {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
-                }
-                try
-                {
                     dodajDoListyKontaktow(loginDodajacego, loginDodawanego);
                     dodajDoListyKontaktow(loginDodawanego, loginDodajacego);
+                    Logowanie.cos.pokazListeKontaktow(dostepni_uzytkownicy());
                 }
                 catch(Exception)
                 {
@@ -575,7 +568,7 @@ namespace baza_danych_azure
                             {
                                 MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
                             }
-                            Logowanie.cos.pokazListeKontaktow(Logowanie.cos.lista, dostepni_uzytkownicy());
+                            Logowanie.cos.pokazListeKontaktow(dostepni_uzytkownicy());
                             MessageBox.Show(queryResult + " zaakceptował Twoją prośbę o dodanie do znajomych.");
                         }
                         else if (queryResult != null && queryResult2 == 4)
@@ -605,7 +598,7 @@ namespace baza_danych_azure
 
         public static void dodajDoListyKontaktow(string loginDodajacego, string loginDodawanego)
         {
-            List<Uzytkownik> lista = pobierz_liste_kontaktow(loginDodajacego);
+            var temp_lista = pobierz_liste_kontaktow(loginDodajacego);
             string login = null;
             string klucz_pub = null;
             string imie = null;
@@ -614,6 +607,7 @@ namespace baza_danych_azure
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
             using (executeQuery)
+            { 
                 try
                 {
                     using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
@@ -629,8 +623,8 @@ namespace baza_danych_azure
                         {
                             readerQuery.Close();
                             Uzytkownik dodaj = new Uzytkownik(login, klucz_pub, imie, opis);
-                            lista.Add(dodaj);
-                            lista_kontaktow_do_xml(lista, loginDodajacego, true);
+                            temp_lista.Add(dodaj);
+                            lista_kontaktow_do_xml(temp_lista, loginDodajacego, true);
                         }
                     }
                 }
@@ -638,6 +632,7 @@ namespace baza_danych_azure
                 {
                     MessageBox.Show("Wystąpił nieoczekiwany błąd!");
                 }
+            }
         }
 
         public static List<string> dostepni_uzytkownicy()

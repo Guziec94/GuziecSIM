@@ -65,7 +65,7 @@ namespace GuziecSIM
 
             // JEZELI UZYTKOWNIK POSIADA JAKICHS ZNAJOMYCH (POBRANA LISTA NIE JEST PUSTA) WYSWIETLAMY ICH
             if (lista != null)
-                pokazListeKontaktow(lista, baza_danych.dostepni_uzytkownicy());
+                pokazListeKontaktow(baza_danych.dostepni_uzytkownicy());
 
             baza_danych.rozglos_logowanie();
 
@@ -113,8 +113,9 @@ namespace GuziecSIM
         }
 
         /* [FUNKCJA UKAZUJACA LISTĘ KONTAKTÓW OTRZYMANA W POSTACI LISTY] */
-        public void pokazListeKontaktow(List<Uzytkownik> lista, List<string> online)
+        public void pokazListeKontaktow(List<string> online)
         {
+            lista = baza_danych.pobierz_liste_kontaktow(_login);
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
                 // CZYSCIMY OKNO Z LISTA ZNAJOMYCH BY MOC JA POTEM UAKTUALNIC
@@ -246,7 +247,7 @@ namespace GuziecSIM
                 baza_danych.lista_kontaktow_do_xml(lista_usuwanego, uzytkownikDoUsuniecia, true);
 
                 // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
-                pokazListeKontaktow(lista, baza_danych.dostepni_uzytkownicy());
+                pokazListeKontaktow(baza_danych.dostepni_uzytkownicy());
             }
         }
 
