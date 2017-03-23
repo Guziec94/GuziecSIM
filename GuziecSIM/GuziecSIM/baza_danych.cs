@@ -373,5 +373,191 @@ namespace baza_danych_azure
             executeQuery.Parameters.AddWithValue("kontakty", xml.ToString());
             executeQuery.ExecuteNonQuery();
         }
+
+        public static void dodajDoListyOczekujacych(string loginDodajacego, string loginDodawanego)
+        {
+            string query = "INSERT INTO oczekujacy_znajomi VALUES(@loginDodajacego,@loginDodawanego,1)";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
+            executeQuery.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
+            executeQuery.ExecuteNonQuery();
+        }
+
+        public static void czyKtosChceDodacDoListy(string login)
+        {
+            string queryResult = null;
+            string query = "SELECT login_dodajacego from oczekujacy_znajomi WHERE login_dodawanego = @login and status = 1";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            queryResult = readerQuery.GetString(0);
+                        }
+                        if (queryResult != null)
+                        {
+                            readerQuery.Close();
+                            odczytanoProsbeDodania(queryResult, login);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                }
+        }
+
+        public static void odczytanoProsbeDodania(string loginDodajacego, string loginDodawanego)
+        {
+            string query = "UPDATE oczekujacy_znajomi SET status = 2 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+            SqlCommand executeQuery1 = new SqlCommand(query, cnn);
+            executeQuery1 = new SqlCommand(query, cnn);
+            executeQuery1.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
+            executeQuery1.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
+            executeQuery1.ExecuteNonQuery();
+
+            if (MessageBox.Show("Czy chcesz dodać użytkownika " + loginDodajacego + " do listy znajomych?", "Dodawanie użytkownika " + loginDodajacego, MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    query = "UPDATE oczekujacy_znajomi SET status = 3 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+                    SqlCommand executeQuery2 = new SqlCommand(query, cnn);
+                    executeQuery2 = new SqlCommand(query, cnn);
+                    executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
+                    executeQuery2.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
+                    executeQuery2.ExecuteNonQuery();
+                }
+                catch(Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                }
+                try
+                {
+                    dodajDoListyKontaktow(loginDodajacego, loginDodawanego);
+                    dodajDoListyKontaktow(loginDodawanego, loginDodajacego);
+                }
+                catch(Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                }
+            }
+            else
+            {
+                try
+                {
+                    query = "UPDATE oczekujacy_znajomi SET status = 4 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+                    SqlCommand executeQuery2 = new SqlCommand(query, cnn);
+                    executeQuery2 = new SqlCommand(query, cnn);
+                    executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
+                    executeQuery2.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
+                    executeQuery2.ExecuteNonQuery();
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                }
+            }
+        }
+
+        public static void powiadomOStatusieDodawania(string login)
+        {
+            string queryResult = null;
+            int queryResult2 = 0;
+            string query = "SELECT login_dodawanego, status from oczekujacy_znajomi WHERE login_dodajacego = @login and (status = 3 OR status = 4)";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", login);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            queryResult = readerQuery.GetString(0);
+                            queryResult2 = readerQuery.GetInt32(1);
+                        }
+                        if (queryResult != null && queryResult2 == 3)
+                        {
+                            readerQuery.Close();
+                            MessageBox.Show(queryResult + " zaakceptował Twoją prośbę o dodanie do znajomych.");
+                            try
+                            {
+                                query = "DELETE FROM oczekujacy_znajomi WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+                                SqlCommand executeQuery3 = new SqlCommand(query, cnn);
+                                executeQuery3.Parameters.AddWithValue("loginDodajacego", login);
+                                executeQuery3.Parameters.AddWithValue("loginDodawanego", queryResult);
+                                executeQuery3.ExecuteNonQuery();
+                            }
+                            catch (Exception)
+                            {
+                                MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
+                            }
+                        }
+                        else if (queryResult != null && queryResult2 == 4)
+                        {
+                            readerQuery.Close();
+                            MessageBox.Show(queryResult + " odrzucił Twoją prośbę o dodanie do znajomych.");
+                            try
+                            {
+                                query = "DELETE FROM oczekujacy_znajomi WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
+                                SqlCommand executeQuery3 = new SqlCommand(query, cnn);
+                                executeQuery3.Parameters.AddWithValue("loginDodajacego", login);
+                                executeQuery3.Parameters.AddWithValue("loginDodawanego", queryResult);
+                                executeQuery3.ExecuteNonQuery();
+                            }
+                            catch (Exception)
+                            {
+                                MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.");
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                }
+        }
+
+        public static void dodajDoListyKontaktow(string loginDodajacego, string loginDodawanego)
+        {
+            List<Uzytkownik> lista = pobierz_liste_kontaktow(loginDodajacego);
+            string login = null;
+            string klucz_pub = null;
+            string imie = null;
+            string opis = null;
+            string query = "SELECT login, klucz_publiczny, imie, opis FROM uzytkownicy WHERE login = @loginDodawanego";
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
+            using (executeQuery)
+                try
+                {
+                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                    {
+                        if (readerQuery.Read())
+                        {
+                            login = readerQuery.GetString(0);
+                            klucz_pub = readerQuery.GetString(1);
+                            imie = readerQuery.GetString(2);
+                            opis = readerQuery.GetString(3);
+                        }
+                        if (login != null && klucz_pub != null && imie != null && opis != null)
+                        {
+                            readerQuery.Close();
+                            Uzytkownik dodaj = new Uzytkownik(login, klucz_pub, imie, opis);
+                            lista.Add(dodaj);
+                            lista_kontaktow_do_xml(lista, loginDodajacego);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Wystąpił nieoczekiwany błąd!");
+                }
+        }
     }
 }

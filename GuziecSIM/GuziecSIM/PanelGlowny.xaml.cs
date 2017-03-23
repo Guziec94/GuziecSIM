@@ -57,6 +57,9 @@ namespace GuziecSIM
             btnUsuw.ToolTip = "Usuń konto";
             btnDod.ToolTip = "Dodaj kontakt";
 
+            baza_danych.powiadomOStatusieDodawania(_login);
+            baza_danych.czyKtosChceDodacDoListy(_login);
+
             // POBIERAMY Z BAZY DANYCH LISTE ZNAJOMYCH AKTUALNIE ZALOGOWANEGO UZYTKOWNIKA
             lista = baza_danych.pobierz_liste_kontaktow(_login);
 
@@ -482,12 +485,13 @@ namespace GuziecSIM
             {
                 if(baza_danych.czyLoginIstnieje(inputDialog.Znajomy))
                 {
-                    // Dodacie ich do znajomych
+                    baza_danych.dodajDoListyOczekujacych(_login, inputDialog.Znajomy);
                 }
                 else MessageBox.Show("Użytkownik o nazwie '" + inputDialog.Znajomy + "' nie istnieje");
             }
         }
 
+        /* [Button do naklejek] */
         private void button1_Copy2_Click(object sender, RoutedEventArgs e)
         {
             button1_Copy2.Content = "Abc";
