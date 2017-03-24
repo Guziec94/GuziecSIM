@@ -9,6 +9,7 @@ using baza_danych_azure;
 using klasa_zabezpieczen;
 using System.Windows.Media.Imaging;
 using System.Windows.Documents;
+using System.IO;
 
 namespace GuziecSIM
 {
@@ -293,6 +294,8 @@ namespace GuziecSIM
                         nadawca.Text = wiadomosc.nadawca;
                         nadawca.Margin = new Thickness(0, 6, 0, 0);
 
+                        list.Items.Add(nadawca);
+
                         // DODAJEMY I STYLUJEMY ELEMENT BEDACY CZASEM NADESLANIA WIADOMOSCI
                         TextBlock czas = new TextBlock();
 
@@ -301,19 +304,67 @@ namespace GuziecSIM
                         czas.Text = wiadomosc.czas.ToString();
                         czas.TextWrapping = TextWrapping.WrapWithOverflow;
 
-                        // DODAJEMY I STYLUJEMY ELEMENT BEDACY TRESCIA WIADOMOSCI
+                        list.Items.Add(czas);
+
+                        // TWORZYMY ELEMENT NA EWENTUALNA TRESC ODEBRANEJ WIADOMOSCI
                         TextBlock text = new TextBlock();
 
                         text.Foreground = Brushes.LightGray;
                         text.FontSize = 10;
-                        text.Text = wiadomosc.Text;
                         text.TextWrapping = TextWrapping.WrapWithOverflow;
                         text.Margin = new Thickness(0, 6, 0, 6);
 
-                        // WSZYSTKIE DANE NA TEMAT WIADOMOSCI ZOSTAJA DODANE DO LISTY STANOWIACEJ SZKIELET GROUPBOXA
-                        list.Items.Add(nadawca);
-                        list.Items.Add(czas);
-                        list.Items.Add(text);
+                        // SPRAWDZAMY CZY TRESC ODEBRANEJ WIADOMOSCI SUGERUJE ZE JEST TO NAKLEJKA
+                        wiadomosc.Text = wiadomosc.Text.Trim();
+
+                        if (wiadomosc.Text.Length >= 13 && wiadomosc.Text.Substring(0, 8) == "Sticker:")
+                        {
+                            // UZYSKUJEMY SCIEZKE DO NAKLEJKI O OTRZYMANEJ NAZWIE PLIKU
+                            string nazwa = wiadomosc.Text.Substring(8);
+                            string sciezka = Path.Combine(Environment.CurrentDirectory, "..\\..\\stickers", nazwa);
+
+                            // ZABEZPIECZAMY PROGRAM PRZED PROBA WCZYTANIA PLIKU NIE BEDACEGO NAKLEJKA JAKO OBIEKTU TYPU IMAGE
+                            List<string> prawidlowe = new List<string> { ".jpeg", ".jpg", ".JPEG", ".JPG", ".png", ".PNG" };
+                            string rozszerzenie = Path.GetExtension(sciezka);
+
+                            if (prawidlowe.Contains(rozszerzenie))
+                            {
+                                // JESLI POSIADAMY NAKLEJKE O NAZWIE PODANEJ W ODEBRANEJ WIADOMOSCI TO WYSWIETLAMY JA
+                                if (File.Exists(sciezka))
+                                {
+                                    BitmapImage bitmap = new BitmapImage(new Uri(sciezka));
+
+                                    Image naklejka = new Image();
+                                    naklejka.Source = bitmap;
+
+                                    naklejka.HorizontalAlignment = HorizontalAlignment.Left;
+                                    naklejka.Margin = new Thickness(0, 6, 0, 0);
+                                    naklejka.Width = naklejka.Height = 60;
+
+                                    list.Items.Add(naklejka);
+                                }
+                                // JESLI NIE POSIADAMY NAKLEJKI KTORA KTOS CHCIAL NAM WYSLAC TO INFORMUJEMY O TYM
+                                else
+                                {
+                                    text.Text = "Wysłano Ci naklejkę, której nie posiadasz: " + nazwa;
+                                    text.Foreground = Brushes.Yellow;
+                                    list.Items.Add(text);
+                                }
+                            }
+                            // INFORMUJEMY O TYM ZE OTRZYMANO PLIK O NIEPRAWIDLOWYM ROZSZERZENIU
+                            else
+                            {
+                                text.Text = "Wysłano Ci plik o niedozwolonym rozszerzeniu: " + nazwa;
+                                text.Foreground = Brushes.Yellow;
+                                list.Items.Add(text);
+                            }
+                        }
+                        else
+                        {
+                            // DODAJEMY I STYLUJEMY ELEMENT BEDACY TRESCIA WIADOMOSCI
+                            text.Text = wiadomosc.Text;
+                            list.Items.Add(text);
+                        }
 
                         // WIADOMOSC ZOSTAJE DODANA DO OKNA KONWERSACJI
                         okno.Items.Add(group);
@@ -349,6 +400,11 @@ namespace GuziecSIM
             // UKAZUJEMY PRZYCISK ZMINIMALIZOWANIA ORAZ ZAMKNIECIA OTWARTEJ KONWERSACJI
             button1_Copy.Visibility = Visibility.Visible;
             button1_Copy1.Visibility = Visibility.Visible;
+
+            // PRZY WYBORZE UZYTKOWNIKA DO KONWERSACJI Z LISTY ZNAJOMYCH DOMYSLNYM OKNEM WIADOMOSCI BEDZIE OKNO NA WIADOMOSC TEKSTOWA
+            button1_Copy2.Content = "☹";
+            textBox.Visibility = Visibility.Visible;
+            listaNaklejek.Visibility = Visibility.Hidden;
         }
 
         /* [PRÓBA WYSŁANIA WIADOMOŚCI] */
@@ -356,7 +412,14 @@ namespace GuziecSIM
         {
             // NADAJEMY WYSYLANEJ WIADOMOSCI AKTUALNA DATE I CZAS ORAZ TRESC POBRANA Z POLA TEKSTOWEGO
             nowa.czas = DateTime.Now;
-            nowa.Text = textBox.Text;
+
+            // JEZELI W MOMENCIE WYSYLANIA WIADOMOSCI AKTYWNE BYLO OKNO WPROWADZANIA TEKSTU WYSYLAMY TEKST W PRZECIWNYM RAZIE WYBRANA NAKLEJKE
+            if (textBox.IsVisible) nowa.Text = textBox.Text;
+            else
+            {
+                Image naklejka = listaNaklejek.SelectedItem as Image;
+                nowa.Text = "Sticker:" + naklejka.ToolTip;
+            }
 
             // WYSYLLAMY NOWA WIADOMOSC DO BAZY DANYCH
             baza_danych.wyslij_krotka_wiadomosc(nowa.nadawca, nowa.odbiorca, lista.Find(x => x.login == nowa.odbiorca).kluczPub, nowa.Text, DateTime.Now.AddDays(3));
@@ -509,10 +572,60 @@ namespace GuziecSIM
             }
         }
 
-        /* [Button do naklejek] */
+        /* [FUNKCJA WYSWETLAJACA NA LISCIE NAKLEJEK WSZYSTKIE OBRAZKI Z ROZSZERZENIEM PNG I JPG ZNAJDUJACE SIE W FOLDERZE STICKERS] */
+        private void pokazNaklejki()
+        {
+            // CZYSCIMY DOTYCHCZASOWA ZAWARTOSC LISTY NAKLEJEK
+            listaNaklejek.Items.Clear();
+
+            // PRZEGLADAMY SCIEZKI DO WSZYSTKICH PLIKOW ZNAJDUJACYCH SIE W FOLDERZE STICKERS
+            string[] naklejki = Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "..\\..\\stickers"));
+            for (int i = 0; i < naklejki.Length; i++)
+            {
+                // DEFINIUJEMY MOZLIWE ROZSZERZENIA I POBIERAMY ROZSZERZENIE AKTUALNIE ROZPATRYWANEGO PLIKU ZNAJDUJACEGO SIE W FOLDERZE NAKLEJEK
+                List<string> prawidlowe = new List<string> { ".jpeg", ".jpg", ".JPEG", ".JPG", ".png", ".PNG" };
+                string rozszerzenie = Path.GetExtension(naklejki[i]);
+
+                // JESLI ROZSZERZENIE AKTUALNIE ROZPATRYWANEGO PLIKU JEST PRAWIDLOWE (WSKAZUJACE NA PLIK BEDACY OBRAZEM) POKAZUJEMY GO NA LISCIE NAKLEJEK
+                if (prawidlowe.Contains(rozszerzenie))
+                {
+                    BitmapImage bitmap = new BitmapImage(new Uri(naklejki[i]));
+
+                    Image naklejka = new Image();
+                    naklejka.Source = bitmap;
+
+                    naklejka.HorizontalAlignment = HorizontalAlignment.Center;
+                    naklejka.ToolTip = Path.GetFileName(naklejki[i]);
+                    naklejka.Margin = new Thickness(0, 6, 0, 0);
+                    naklejka.Width = naklejka.Height = 60;
+
+                    listaNaklejek.Items.Add(naklejka);
+                }
+            }
+
+            if (listaNaklejek.HasItems)
+            {
+                listaNaklejek.SelectedIndex = 0;
+                pokazWiadom(nowa.odbiorca);
+            }
+            else
+            {
+                button1_Copy2.Content = button1_Copy2.Content.ToString() == "☹" ? "Abc" : "☹";
+                textBox.Visibility = textBox.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
+                listaNaklejek.Visibility = listaNaklejek.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
+
+                MessageBox.Show("Nie posiadasz żadnych naklejek.");
+            }
+        }
+
+        /* [BUTTON PRZELACZAJACY FUNKCJE PISANIA I WYBORU NAKLEJKI] */
         private void button1_Copy2_Click(object sender, RoutedEventArgs e)
         {
-            button1_Copy2.Content = "Abc";
+            button1_Copy2.Content = button1_Copy2.Content.ToString() == "☹" ? "Abc" : "☹";
+            textBox.Visibility = textBox.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
+            listaNaklejek.Visibility = listaNaklejek.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
+
+            pokazNaklejki();
         }
     }
 }

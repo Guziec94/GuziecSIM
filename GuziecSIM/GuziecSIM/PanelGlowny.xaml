@@ -21,5 +21,12 @@
         <Button x:Name="btnUsuw" Content="" HorizontalAlignment="Left" Margin="493,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFFBCAC7" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="btnUsuw_Click" Visibility="Visible"/>
         <Button x:Name="btnWyl" Content="" HorizontalAlignment="Left" Margin="463,28,0,0" VerticalAlignment="Top" Width="29" Foreground="White" Background="#FFFAFDD8" BorderThickness="0" Height="8" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" Click="btnWyl_Click" Visibility="Visible"/>
         <Button x:Name="button1_Copy2" Content="☹" HorizontalAlignment="Left" Margin="199,303,0,0" VerticalAlignment="Top" Width="63" Foreground="White" Background="#FFA7CF76" BorderThickness="0" Height="27" BorderBrush="#FFE6E6E6" RenderTransformOrigin="-0.095,0.486" IsEnabled="False" Click="button1_Copy2_Click" FontSize="16"/>
+        <ListBox x:Name="listaNaklejek" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Height="73" Margin="15,257,0,0" VerticalAlignment="Top" Width="179" RenderTransformOrigin="0.72,0.531" Visibility="Hidden">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="2" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+        </ListBox>
     </Grid>
 </Page>
