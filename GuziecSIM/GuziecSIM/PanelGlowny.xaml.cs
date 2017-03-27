@@ -61,12 +61,8 @@ namespace GuziecSIM
             baza_danych.powiadomOStatusieDodawania(_login);
             baza_danych.czyKtosChceDodacDoListy(_login);
 
-            // POBIERAMY Z BAZY DANYCH LISTE ZNAJOMYCH AKTUALNIE ZALOGOWANEGO UZYTKOWNIKA
-            lista = baza_danych.pobierz_liste_kontaktow(_login);
-
             // JEZELI UZYTKOWNIK POSIADA JAKICHS ZNAJOMYCH (POBRANA LISTA NIE JEST PUSTA) WYSWIETLAMY ICH
-            if (lista != null)
-                pokazListeKontaktow(baza_danych.dostepni_uzytkownicy());
+            pokazListeKontaktow();
 
             baza_danych.rozglos_logowanie();
 
@@ -114,96 +110,100 @@ namespace GuziecSIM
         }
 
         /* [FUNKCJA UKAZUJACA LISTĘ KONTAKTÓW OTRZYMANA W POSTACI LISTY] */
-        public void pokazListeKontaktow(List<string> online)
+        public void pokazListeKontaktow()
         {
             lista = baza_danych.pobierz_liste_kontaktow(_login);
-            Application.Current.Dispatcher.Invoke((Action)delegate
+            List<string> online = baza_danych.dostepni_uzytkownicy();
+            if (lista != null)
             {
-                // CZYSCIMY OKNO Z LISTA ZNAJOMYCH BY MOC JA POTEM UAKTUALNIC
-                kontakty.Items.Clear();
-
-                foreach (var kontakt in lista)
+                Application.Current.Dispatcher.Invoke((Action)delegate
                 {
-                    // KAZDEGO UZYTKOWNIKA NA LISCIE ZNAJOMCH OPISUJE POJEDYNCZY GROUPBOX KTOREGO ZAWARTOSC TO LISTA DANYCH TAKICH JAK: LOGIN, IMIE, OPIS I PRZYCISK USUWAJACY TEGO ZNAJOMEGO Z LISTY
-                    GroupBox group = new GroupBox();
-                    ListBox list = new ListBox();
-                    group.Content = list;
+                    // CZYSCIMY OKNO Z LISTA ZNAJOMYCH BY MOC JA POTEM UAKTUALNIC
+                    kontakty.Items.Clear();
 
-                    // KOLEJNO: USUWAMY OBRAMOWANIE DLA DANYCH UZYTKOWNIKA ZNAJDUJACYCH SIE WEWNATRZ GROUPBOXA, BLOKUJEMY MOZLIWOSC POJAWIENIA SIE POZIOMEGO PASKA PRZEWIJANIA, ORAZ NADAJEMY STYL DZIEKI KTOREMU SKLADOWE DANYCH UZYTKOWNIKA PO NAJECHANIU NIE BEDA PODSWIETLANE
-                    list.BorderThickness = new Thickness(0);
-                    list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
-                    list.Style = (Style)Application.Current.Resources["listboxBezPodswietlen"];
+                    foreach (var kontakt in lista)
+                    {
+                        // KAZDEGO UZYTKOWNIKA NA LISCIE ZNAJOMCH OPISUJE POJEDYNCZY GROUPBOX KTOREGO ZAWARTOSC TO LISTA DANYCH TAKICH JAK: LOGIN, IMIE, OPIS I PRZYCISK USUWAJACY TEGO ZNAJOMEGO Z LISTY
+                        GroupBox group = new GroupBox();
+                        ListBox list = new ListBox();
+                        group.Content = list;
 
-                    // KOLEJNO: NADAJEMY SZYROKOSC GENEROWANEGO GROUPBOXA DLA DANEGO ZNAJOMEGO, ZMIENIAMY KOLOR JEGO OBRAMOWANIA NA JASNO-SZARY, USTAWIAMY JEGO OBRAMOWANIE NA TYLKO DOLNE (SEPARUJACE ZNAJOMYCH), DEFINIUJEMY PODPOWIEDZ PO NAJECHANIU NA ELEMENT ZNAJOMEGO
-                    group.Width = 220;
-                    group.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
-                    group.BorderThickness = new Thickness(0, 0, 0, 1);
-                    group.ToolTip = "Dwukrotne kliknięcie LPM rozpocznie konwersację";
+                        // KOLEJNO: USUWAMY OBRAMOWANIE DLA DANYCH UZYTKOWNIKA ZNAJDUJACYCH SIE WEWNATRZ GROUPBOXA, BLOKUJEMY MOZLIWOSC POJAWIENIA SIE POZIOMEGO PASKA PRZEWIJANIA, ORAZ NADAJEMY STYL DZIEKI KTOREMU SKLADOWE DANYCH UZYTKOWNIKA PO NAJECHANIU NIE BEDA PODSWIETLANE
+                        list.BorderThickness = new Thickness(0);
+                        list.SetValue(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled);
+                        list.Style = (Style)Application.Current.Resources["listboxBezPodswietlen"];
 
-                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY LOGINEM ZNAJOMEGO
-                    TextBlock login = new TextBlock();
+                        // KOLEJNO: NADAJEMY SZYROKOSC GENEROWANEGO GROUPBOXA DLA DANEGO ZNAJOMEGO, ZMIENIAMY KOLOR JEGO OBRAMOWANIA NA JASNO-SZARY, USTAWIAMY JEGO OBRAMOWANIE NA TYLKO DOLNE (SEPARUJACE ZNAJOMYCH), DEFINIUJEMY PODPOWIEDZ PO NAJECHANIU NA ELEMENT ZNAJOMEGO
+                        group.Width = 220;
+                        group.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
+                        group.BorderThickness = new Thickness(0, 0, 0, 1);
+                        group.ToolTip = "Dwukrotne kliknięcie LPM rozpocznie konwersację";
 
-                    //login.Text = kontakt.login;
-                    login.Foreground = Brushes.Black;
-                    login.FontSize = 12;
+                        // DODAJEMY I STYLUJEMY ELEMENT BEDACY LOGINEM ZNAJOMEGO
+                        TextBlock login = new TextBlock();
 
-                    login.Margin = new Thickness(0, 6, 0, 0);
+                        //login.Text = kontakt.login;
+                        login.Foreground = Brushes.Black;
+                        login.FontSize = 12;
 
-                    //// OBOK LOGINU DODAJEMY KOLOROWE KOLKO SYGNALIZUJACE STATUS ZNAJOMEGO JESLI ZNAJDUJE SIE ON NA LISCIE ONLINE
-                    login.Inlines.Add(new Run(kontakt.login));
-                    login.Inlines.Add(new Run(" ✩") { Foreground = online.Contains(kontakt.login) ? new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118)) : Brushes.DarkOrange, FontSize = 10 });
+                        login.Margin = new Thickness(0, 6, 0, 0);
 
-                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY IMIENIEM ZNAJOMEGO
-                    TextBlock imie = new TextBlock();
+                        //// OBOK LOGINU DODAJEMY KOLOROWE KOLKO SYGNALIZUJACE STATUS ZNAJOMEGO JESLI ZNAJDUJE SIE ON NA LISCIE ONLINE
+                        login.Inlines.Add(new Run(kontakt.login));
+                        login.Inlines.Add(new Run(" ✩") { Foreground = online.Contains(kontakt.login) ? new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118)) : Brushes.DarkOrange, FontSize = 10 });
 
-                    imie.Foreground = Brushes.Gray;
-                    imie.FontSize = 10;
-                    imie.Text = kontakt.imie;
-                    imie.Margin = new Thickness(0, 0, 0, 0);
+                        // DODAJEMY I STYLUJEMY ELEMENT BEDACY IMIENIEM ZNAJOMEGO
+                        TextBlock imie = new TextBlock();
 
-                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY OPISEM ZNAJOMEGO
-                    TextBlock opis = new TextBlock();
+                        imie.Foreground = Brushes.Gray;
+                        imie.FontSize = 10;
+                        imie.Text = kontakt.imie;
+                        imie.Margin = new Thickness(0, 0, 0, 0);
 
-                    opis.Foreground = Brushes.LightGray;
-                    opis.FontSize = 10;
-                    opis.Text = kontakt.opis;
-                    opis.TextWrapping = TextWrapping.WrapWithOverflow;
-                    opis.Margin = new Thickness(0, 6, 0, 0);
+                        // DODAJEMY I STYLUJEMY ELEMENT BEDACY OPISEM ZNAJOMEGO
+                        TextBlock opis = new TextBlock();
 
-                    // DODAJEMY I STYLUJEMY ELEMENT BEDACY PRZYCISKIEM USUWAJACYM ZNAJOMEGO
-                    Button btnUsun = new Button();
+                        opis.Foreground = Brushes.LightGray;
+                        opis.FontSize = 10;
+                        opis.Text = kontakt.opis;
+                        opis.TextWrapping = TextWrapping.WrapWithOverflow;
+                        opis.Margin = new Thickness(0, 6, 0, 0);
 
-                    btnUsun.BorderThickness = new Thickness(1, 0, 0, 1);
-                    btnUsun.Margin = new Thickness(0, 6, 0, 0);
+                        // DODAJEMY I STYLUJEMY ELEMENT BEDACY PRZYCISKIEM USUWAJACYM ZNAJOMEGO
+                        Button btnUsun = new Button();
 
-                    btnUsun.HorizontalAlignment = HorizontalAlignment.Left;
-                    btnUsun.Width = 40;
+                        btnUsun.BorderThickness = new Thickness(1, 0, 0, 1);
+                        btnUsun.Margin = new Thickness(0, 6, 0, 0);
 
-                    btnUsun.Style = (Style)Application.Current.Resources["ladnyPrzyciskStyle"];
-                    btnUsun.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
-                    btnUsun.Cursor = Cursors.Hand;
-                    btnUsun.FontSize = 10;
+                        btnUsun.HorizontalAlignment = HorizontalAlignment.Left;
+                        btnUsun.Width = 40;
 
-                    btnUsun.Content = " Usuń ";
-                    btnUsun.ToolTip = "Kliknięcie spowoduje usunięcie znajomego";
+                        btnUsun.Style = (Style)Application.Current.Resources["ladnyPrzyciskStyle"];
+                        btnUsun.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
+                        btnUsun.Cursor = Cursors.Hand;
+                        btnUsun.FontSize = 10;
 
-                    btnUsun.Click += BtnUsun_Click;
-                    btnUsun.Name = (login.Inlines.FirstInline as Run).Text;
+                        btnUsun.Content = " Usuń ";
+                        btnUsun.ToolTip = "Kliknięcie spowoduje usunięcie znajomego";
 
-                    // WSZYSTKIE 3 ELEMENTY OPISUJACE ZNAJOMEGO ORAZ BUTTON USUWAJACY GO DODAJEMY DO LISTY BEDACEJ SZKIELETEM GROUPBOXA PRZYPISANEGO DO DANEGO UZYTKOWNIKA
-                    list.Items.Add(login);
-                    list.Items.Add(imie);
-                    list.Items.Add(opis);
-                    list.Items.Add(btnUsun);
+                        btnUsun.Click += BtnUsun_Click;
+                        btnUsun.Name = (login.Inlines.FirstInline as Run).Text;
 
-                    // GENEROWANEMU GROUPBOXOWI NADAJEMY IDENTYFIKATOR BEDACY LOGINEM DANEGO ZNAJOMEGO DZIEKI CZEMU BEDZIEMY MOGLI UZYSKAC INFORMACJE O TYM JAKIEGO ZNAJOMEGO GROUPBOX KLIKNIETO W OBSLUDZE EVENTU ZDEFINIOWANEGO PONIZEJ
-                    group.Name = (login.Inlines.FirstInline as Run).Text;
-                    group.MouseDoubleClick += Group_MouseDoubleClick;
+                        // WSZYSTKIE 3 ELEMENTY OPISUJACE ZNAJOMEGO ORAZ BUTTON USUWAJACY GO DODAJEMY DO LISTY BEDACEJ SZKIELETEM GROUPBOXA PRZYPISANEGO DO DANEGO UZYTKOWNIKA
+                        list.Items.Add(login);
+                        list.Items.Add(imie);
+                        list.Items.Add(opis);
+                        list.Items.Add(btnUsun);
 
-                    // DODAJEMY GROUPBOX UZUPELNIONY DANYMI ZNAJOMEGO DO LISTY KONTAKTOW
-                    kontakty.Items.Add(group);
-                }
-            });
+                        // GENEROWANEMU GROUPBOXOWI NADAJEMY IDENTYFIKATOR BEDACY LOGINEM DANEGO ZNAJOMEGO DZIEKI CZEMU BEDZIEMY MOGLI UZYSKAC INFORMACJE O TYM JAKIEGO ZNAJOMEGO GROUPBOX KLIKNIETO W OBSLUDZE EVENTU ZDEFINIOWANEGO PONIZEJ
+                        group.Name = (login.Inlines.FirstInline as Run).Text;
+                        group.MouseDoubleClick += Group_MouseDoubleClick;
+
+                        // DODAJEMY GROUPBOX UZUPELNIONY DANYMI ZNAJOMEGO DO LISTY KONTAKTOW
+                        kontakty.Items.Add(group);
+                    }
+                });
+            }
         }
 
         /* [FUNKCJA USUWAJACA UZYTKOWNIKA Z LISTY ZAJOMYCH] */
@@ -244,11 +244,14 @@ namespace GuziecSIM
                 baza_danych.lista_kontaktow_do_xml(lista, _login, false);
                 List<Uzytkownik> lista_usuwanego = new List<Uzytkownik>();
                 lista_usuwanego = baza_danych.pobierz_liste_kontaktow(uzytkownikDoUsuniecia);
-                lista_usuwanego.Remove(lista_usuwanego.Find(x => x.login == _login));
-                baza_danych.lista_kontaktow_do_xml(lista_usuwanego, uzytkownikDoUsuniecia, true);
+                if (lista_usuwanego != null)
+                {
+                    lista_usuwanego.Remove(lista_usuwanego.Find(x => x.login == _login));
+                    baza_danych.lista_kontaktow_do_xml(lista_usuwanego, uzytkownikDoUsuniecia, true);
+                }
 
                 // ODSWIEZAMY OKNO ZAWIERAJACE LISTE ZNAJOMYCH
-                pokazListeKontaktow(baza_danych.dostepni_uzytkownicy());
+                pokazListeKontaktow();
             }
         }
 
@@ -556,7 +559,7 @@ namespace GuziecSIM
                 {
                     if (baza_danych.czyLoginIstnieje(inputDialog.Znajomy))
                     {
-                        if (baza_danych.sprawdzListeKontaktow(_login, inputDialog.Znajomy, lista))
+                        if (baza_danych.sprawdzListeKontaktow(_login, inputDialog.Znajomy))
                         {
                             MessageBox.Show("Zaproszenie zostało wysłane.");
                             baza_danych.dodajDoListyOczekujacych(_login, inputDialog.Znajomy);

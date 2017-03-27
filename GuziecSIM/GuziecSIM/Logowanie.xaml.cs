@@ -57,8 +57,7 @@ namespace GuziecSIM
                 {
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
-                        string externalIP = new WebClient().DownloadString("http://icanhazip.com").Replace("\n","");
-                        baza_danych.wprowadzAdresIP(_login, externalIP);
+                        baza_danych.wprowadzAdresIP(_login);
                         cos = new PanelGlowny();
                         NavigationService nav = NavigationService.GetNavigationService(this);
                         nav.Navigate(cos);

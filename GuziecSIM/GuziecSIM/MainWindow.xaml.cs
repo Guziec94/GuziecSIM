@@ -32,6 +32,7 @@ namespace GuziecSIM
         {
             if(Logowanie._login != null)
             {
+                baza_danych_azure.baza_danych.rozglos_logowanie();
                 baza_danych_azure.baza_danych.usunAdresIP(Logowanie._login);
             }
         }

@@ -8,9 +8,6 @@
         public string imie;
         public string opis;
 
-        public string ip;
-        public int port;
-
         public Uzytkownik(string login, string kluczPub, string imie, string opis)
         {
             this.login = login;
