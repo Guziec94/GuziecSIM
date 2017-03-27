@@ -93,11 +93,14 @@ namespace GuziecSIM
                         // ZNAJDUJEMY NA LISCIE ZNAJOMYCH NADAWCE WIADOMOSCI I JEGO KOLOR JEGO LOGINU ZMIENIAMY NA CZERWONY I ODSWIEZAMY OKNO KONWERSACJI JESLI NOWE WIADOMOSCI NALEZALY DO OSOBY Z KTORA AKTUALNIE ROZMAWIAL UZYTKOWNIK
                         foreach (var kontakt in kontakty.Items)
                         {
-                            Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
-                            pokazWiadom(login.Text);
+                            Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;      
                             if (login.Text == w.nadawca)
                             {
-                                login.Foreground = Brushes.Red;
+                                if(nowa != null && nowa.odbiorca == w.nadawca)
+                                    pokazWiadom(login.Text);
+
+                                if (nowa == null || nowa.odbiorca != login.Text)
+                                    login.Foreground = Brushes.Red;
                                 break;
                             }
                         }
@@ -150,7 +153,7 @@ namespace GuziecSIM
 
                         //// OBOK LOGINU DODAJEMY KOLOROWE KOLKO SYGNALIZUJACE STATUS ZNAJOMEGO JESLI ZNAJDUJE SIE ON NA LISCIE ONLINE
                         login.Inlines.Add(new Run(kontakt.login));
-                        login.Inlines.Add(new Run(" ✩") { Foreground = online.Contains(kontakt.login) ? new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118)) : Brushes.DarkOrange, FontSize = 10 });
+                        login.Inlines.Add(new Run(" ✩") { Foreground = online.Contains(kontakt.login) ? new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118)) : Brushes.DarkOrange, FontSize = 14 });
 
                         // DODAJEMY I STYLUJEMY ELEMENT BEDACY IMIENIEM ZNAJOMEGO
                         TextBlock imie = new TextBlock();
@@ -400,6 +403,12 @@ namespace GuziecSIM
             button1.IsEnabled = true;
             button1_Copy2.IsEnabled = true;
 
+            button1.Background = new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118));
+            button1.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)255, (byte)255, (byte)255));
+
+            button1_Copy2.Background = new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118));
+            button1_Copy2.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)255, (byte)255, (byte)255));
+
             // UKAZUJEMY PRZYCISK ZMINIMALIZOWANIA ORAZ ZAMKNIECIA OTWARTEJ KONWERSACJI
             button1_Copy.Visibility = Visibility.Visible;
             button1_Copy1.Visibility = Visibility.Visible;
@@ -452,11 +461,23 @@ namespace GuziecSIM
             textBox.IsEnabled = false;
             button1.IsEnabled = false;
             button1_Copy2.IsEnabled = false;
+
+            button1.Background = new SolidColorBrush(Color.FromArgb(255, (byte)255, (byte)255, (byte)255));
+            button1.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
+
+            button1_Copy2.Background = new SolidColorBrush(Color.FromArgb(255, (byte)255, (byte)255, (byte)255));
+            button1_Copy2.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
+
             nowa = null;
 
             // CHOWAMY PRZYCISKI ODPOWIEDZIALNE ZA MINIMALIZOWANIE I ZAMYKANIE KONWERSACJI
             button1_Copy.Visibility = Visibility.Hidden;
             button1_Copy1.Visibility = Visibility.Hidden;
+
+            // PRZY ZMINIMALIZOWANIU KONWERSACJI DOMYSLNYM OKNEM WIADOMOSCI BEDZIE OKNO NA WIADOMOSC TEKSTOWA
+            button1_Copy2.Content = "☹";
+            textBox.Visibility = Visibility.Visible;
+            listaNaklejek.Visibility = Visibility.Hidden;
         }
 
         /* [ZAMKNIECIE OKNA ROZMOWY] */
@@ -490,11 +511,23 @@ namespace GuziecSIM
             textBox.IsEnabled = false;
             button1.IsEnabled = false;
             button1_Copy2.IsEnabled = false;
+
+            button1.Background = new SolidColorBrush(Color.FromArgb(255, (byte)255, (byte)255, (byte)255));
+            button1.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
+
+            button1_Copy2.Background = new SolidColorBrush(Color.FromArgb(255, (byte)255, (byte)255, (byte)255));
+            button1_Copy2.Foreground = new SolidColorBrush(Color.FromArgb(255, (byte)80, (byte)80, (byte)80));
+
             nowa = null;
 
             // CHOWAMY PRZYCISKI ODPOWIEDZIALNE ZA MINIMALIZOWANIE I ZAMYKANIE KONWERSACJI
             button1_Copy.Visibility = Visibility.Hidden;
             button1_Copy1.Visibility = Visibility.Hidden;
+
+            // PRZY ZAMKNIECIU KONWERSACJI DOMYSLNYM OKNEM WIADOMOSCI BEDZIE OKNO NA WIADOMOSC TEKSTOWA
+            button1_Copy2.Content = "☹";
+            textBox.Visibility = Visibility.Visible;
+            listaNaklejek.Visibility = Visibility.Hidden;
         }
 
         /* [WYBRANO OPCJĘ WYLOGOWANIA SIĘ] */
