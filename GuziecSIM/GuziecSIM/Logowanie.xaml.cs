@@ -57,10 +57,18 @@ namespace GuziecSIM
                 {
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
-                        baza_danych.wprowadzAdresIP(_login);
-                        cos = new PanelGlowny();
-                        NavigationService nav = NavigationService.GetNavigationService(this);
-                        nav.Navigate(cos);
+                        bool czy_zalogowany = baza_danych.czy_zalogowany();
+                        if (czy_zalogowany == false)
+                        {
+                            baza_danych.wprowadzAdresIP(_login);
+                            cos = new PanelGlowny();
+                            NavigationService nav = NavigationService.GetNavigationService(this);
+                            nav.Navigate(cos);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Użytkownik jest już zalogowany w systemie.");
+                        }
                     }
                     else
                     {

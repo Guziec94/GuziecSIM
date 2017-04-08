@@ -15,6 +15,7 @@ namespace baza_danych_azure
     {
         public static SqlConnection cnn;
         public static string connectionString = "Data Source=tcp:LENOVOY510P;Initial Catalog = GuziecSIMDB; User ID = Guziec94; Password=P@ssw0rd";
+        //public static string connectionString = "Data Source=tcp:217.170.173.210,1433;Initial Catalog = GuziecSIMDB; User ID = Guziec94; Password=P@ssw0rd";
 
         public static void polacz_z_baza()
         {
@@ -47,7 +48,7 @@ namespace baza_danych_azure
             SqlDependency.Start(connectionString);
             var _connection = new SqlConnection(connectionString);
             _connection.Open();
-            SqlCommand _sqlCommand = new SqlCommand("SELECT [nowa_wiadomosc],[nowy_oczekujacy],[przeladuj_kontakty] FROM dbo.lista_zdarzen where login = @login", _connection);
+            SqlCommand _sqlCommand = new SqlCommand("SELECT [nowa_wiadomosc],[nowy_oczekujacy],[przeladuj_kontakty],[sprawdz_logowanie] FROM dbo.lista_zdarzen where login = @login", _connection);
             _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
             _sqlCommand.Notification = null;
             dependency = new SqlDependency(_sqlCommand);
@@ -65,7 +66,7 @@ namespace baza_danych_azure
             {
                 if (eventArgs.Info.ToString() == "Update")
                 {
-                    string query = "SELECT [nowa_wiadomosc],[nowy_oczekujacy],[przeladuj_kontakty] FROM dbo.lista_zdarzen where login = @login";
+                    string query = "SELECT [nowa_wiadomosc],[nowy_oczekujacy],[przeladuj_kontakty],[sprawdz_logowanie] FROM dbo.lista_zdarzen where login = @login";
                     SqlCommand executeQuery = new SqlCommand(query, cnn);
                     executeQuery.Parameters.AddWithValue("login", Logowanie._login);
                     using (executeQuery)
@@ -77,6 +78,7 @@ namespace baza_danych_azure
                                 bool if1 = readerQuery.GetSqlBoolean(0) == true ? true : false;
                                 bool if2 = readerQuery.GetSqlBoolean(1) == true ? true : false;
                                 bool if3 = readerQuery.GetSqlBoolean(2) == true ? true : false;
+                                bool if4 = readerQuery.GetSqlBoolean(3) == true ? true : false;
                                 readerQuery.Close();
                                 if (if1)//nowa wiadomosc
                                 {
@@ -126,12 +128,44 @@ namespace baza_danych_azure
                                     updateQuery.Parameters.AddWithValue("login", Logowanie._login);
                                     updateQuery.ExecuteNonQuery();
                                 }
+                                if (if4)//sprawdzenie czy użytkownik jest zalogowany
+                                {
+                                    query = "update lista_zdarzen set sprawdz_logowanie=0 where login = @login";//wyzerowanie eventu
+                                    SqlCommand updateQuery = new SqlCommand(query, cnn);
+                                    updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+                                    updateQuery.ExecuteNonQuery();
+                                }
                             }
                         }
                     }
                     broker();
                 }
             }
+        }
+
+        public static bool czy_zalogowany()
+        {
+            bool wynik = true;
+            string query = "update lista_zdarzen set sprawdz_logowanie=1 where login = @login";//ustawienie eventu
+            SqlCommand updateQuery = new SqlCommand(query, cnn);
+            updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+            updateQuery.ExecuteNonQuery();
+            System.Threading.Thread.Sleep(2000);
+            query = "select sprawdz_logowanie from lista_zdarzen where login = @login";//ustawienie eventu
+            SqlCommand executeQuery = new SqlCommand(query, cnn);
+            executeQuery.Parameters.AddWithValue("login", Logowanie._login);
+            using (executeQuery)
+            {
+                using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
+                {
+                    if (readerQuery.Read())
+                    {
+                        wynik = readerQuery.GetSqlBoolean(0) == true ? true : false;
+                        readerQuery.Close();
+                    }
+                }
+            }
+            return !wynik;
         }
 
         public static void broker_stop()
@@ -337,15 +371,15 @@ namespace baza_danych_azure
             executeQuery.ExecuteNonQuery();
         }
 
-        public static void wprowadzAdresIP(string login)
+        public static void wprowadzAdresIP(string login)//ustawienie statusu na zalogowany
         {
-            string query = "UPDATE uzytkownicy set czy_zalogowany=1 where login = @login";
+            string query = "UPDATE uzytkownicy set czy_zalogowany=1 where login = @login;update lista_zdarzen set nowa_wiadomosc = 0, nowy_oczekujacy = 0, przeladuj_kontakty = 0, sprawdz_logowanie = 0 where login = @login";//DO SPRAWDZENIA CZY NIE POWODUJE BŁĘDÓW PRZY NP. OCZEKUJĄCYCH KONTAKTACH (OGÓLNIE EVENTACH USTAWIONYCH GDY UŻYTKOWNIK BYŁ OFFLINE)
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             executeQuery.ExecuteNonQuery();
         }
 
-        public static void usunAdresIP(string login)
+        public static void usunAdresIP(string login)//ustawienie statusu na wylogowany
         {
             string query = "UPDATE uzytkownicy set czy_zalogowany=0 where login = @login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
