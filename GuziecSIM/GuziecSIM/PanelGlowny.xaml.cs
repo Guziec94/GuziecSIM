@@ -153,7 +153,8 @@ namespace GuziecSIM
 
                         //// OBOK LOGINU DODAJEMY KOLOROWE KOLKO SYGNALIZUJACE STATUS ZNAJOMEGO JESLI ZNAJDUJE SIE ON NA LISCIE ONLINE
                         login.Inlines.Add(new Run(kontakt.login));
-                        login.Inlines.Add(new Run(" ✩") { Foreground = online.Contains(kontakt.login) ? new SolidColorBrush(Color.FromArgb(255, (byte)167, (byte)207, (byte)118)) : Brushes.DarkOrange, FontSize = 14 });
+                        login.Inlines.Add(new Run((online.Contains(kontakt.login) ? " ( ͡° ͜ʖ ͡°)" : " ( ͡° ʖ̯ ͡°)")) { Foreground = online.Contains(kontakt.login) ? Brushes.DarkGreen : Brushes.DarkOrange, FontSize = 14 });
+
 
                         // DODAJEMY I STYLUJEMY ELEMENT BEDACY IMIENIEM ZNAJOMEGO
                         TextBlock imie = new TextBlock();
@@ -563,6 +564,18 @@ namespace GuziecSIM
                     {
                         // USUWAMY KONTO Z BAZY DANYCH
                         baza_danych.usun_konto(_login, _klucz);
+
+                        // USUWAMY KONTAKT Z LIST KONTAKTÓW ZAZNAJOMIONYCH UŻYTKOWNIKÓW
+                        foreach (var kontakt in lista)
+                        {
+                            List<Uzytkownik> lista_usuwanego = new List<Uzytkownik>();
+                            lista_usuwanego = baza_danych.pobierz_liste_kontaktow(kontakt.login);
+                            if (lista_usuwanego != null)
+                            {
+                                lista_usuwanego.Remove(lista_usuwanego.Find(x => x.login == _login));
+                                baza_danych.lista_kontaktow_do_xml(lista_usuwanego, kontakt.login, true);
+                            }
+                        }
 
                         // ZMIENIAMY SPOWROTEM TYTUL BELKI GORNEJ APLIKACJI NIE UWZGLEDNIAJAC TYM RAZEM ZADNEGO LOGINU
                         Application.Current.MainWindow.Title = "GuziecSIM";
