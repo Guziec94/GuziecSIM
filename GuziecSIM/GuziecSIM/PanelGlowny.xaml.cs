@@ -76,6 +76,47 @@ namespace GuziecSIM
             okno.Dispatcher.Invoke(new Action(() => okno.Items.Clear()), System.Windows.Threading.DispatcherPriority.Normal);
         }
 
+        private void sortujKontakty()
+        {
+            List<string> online = baza_danych.dostepni_uzytkownicy();
+            List<GroupBox> sorted = new List<GroupBox>();
+
+            foreach (var kontakt in kontakty.Items)
+            {
+                Run login = (((kontakt as GroupBox).Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
+
+                if (login.Foreground == Brushes.Red) sorted.Insert(0, (kontakt as GroupBox)); // <-- UŻYTKOWNIK Z NOWĄ WIADOMOŚCIĄ
+                else if (login.Foreground == new SolidColorBrush(Color.FromArgb(255, (byte)111, (byte)163, (byte)99))) // <-- UŻYTKOWNIK Z AKTYWNYM OKNEM KONWERSACJI LUB ZMINIMALIZOWANYM
+                {
+                    int index = 0;
+                    while (index < sorted.Count)
+                    {
+                        Run loginSorted = ((sorted[index].Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
+                        if (loginSorted.Foreground != Brushes.Red) break;
+
+                        ++index;
+                    }
+                    sorted.Insert(index, (kontakt as GroupBox));
+                }
+                else if (online.Contains(login.Text)) // <-- UŻYTKOWNIK ONLINE
+                {
+                    int index = 0;
+                    while (index < sorted.Count)
+                    {
+                        Run loginSorted = ((sorted[index].Content as ListBox).Items.GetItemAt(0) as TextBlock).Inlines.FirstInline as Run;
+                        if (loginSorted.Foreground != Brushes.Red && loginSorted.Foreground != new SolidColorBrush(Color.FromArgb(255, (byte)111, (byte)163, (byte)99))) break;
+
+                        ++index;
+                    }
+                    sorted.Insert(index, (kontakt as GroupBox));
+                }
+                else sorted.Add((kontakt as GroupBox)); // <-- UŻYTKOWNIK JEST OFFLINE
+            }
+
+            kontakty.Items.Clear();
+            for (int i = 0; i < sorted.Count; i++) kontakty.Items.Add(sorted[i]);
+        }
+
         public void wczytaj_wiadomosci()
         {
             // STOSUJEMY INVOKE ZE WZGLEDU NA TO ZE FUNKCJA RAPORTUJACA O ZMIANACH NA BAZIE DANYCH JEST WYWOLYWANA NA INNYM WATKU A MUSI MIEC MOZLIWOSC MODYFIKOWANIA STANU KONTROLEK INTERFEJSU
@@ -103,7 +144,12 @@ namespace GuziecSIM
                                     pokazWiadom(login.Text);
 
                                 if (nowa == null || nowa.odbiorca != login.Text)
+                                {
                                     login.Foreground = Brushes.Red;
+
+                                    /*SORTOWANIE KONTAKTÓW NA LIŚCIE ZNAJOMYCH*/
+                                    sortujKontakty();
+                                }
                                 break;
                             }
                         }
@@ -209,6 +255,9 @@ namespace GuziecSIM
                         // DODAJEMY GROUPBOX UZUPELNIONY DANYMI ZNAJOMEGO DO LISTY KONTAKTOW
                         kontakty.Items.Add(group);
                     }
+
+                    /*SORTOWANIE KONTAKTÓW NA LIŚCIE ZNAJOMYCH*/
+                    sortujKontakty();
                 });
             }
         }
@@ -421,6 +470,9 @@ namespace GuziecSIM
             button1_Copy2.Content = "☹";
             textBox.Visibility = Visibility.Visible;
             listaNaklejek.Visibility = Visibility.Hidden;
+
+            /*SORTOWANIE KONTAKTÓW NA LIŚCIE ZNAJOMYCH*/
+            sortujKontakty();
         }
 
         /* [PRÓBA WYSŁANIA WIADOMOŚCI] */
@@ -532,6 +584,9 @@ namespace GuziecSIM
             button1_Copy2.Content = "☹";
             textBox.Visibility = Visibility.Visible;
             listaNaklejek.Visibility = Visibility.Hidden;
+
+            /*SORTOWANIE KONTAKTÓW NA LIŚCIE ZNAJOMYCH*/
+            sortujKontakty();
         }
 
         /* [WYBRANO OPCJĘ WYLOGOWANIA SIĘ] */
