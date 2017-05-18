@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
-using baza_danych_azure;
+using api_baza_danych;
 
 namespace GuziecSIM
 {

@@ -1,20 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using klasa_zabezpieczen;
-using Microsoft.Win32;
-using System.IO;
+using System.Windows.Forms;
 
 namespace GuziecSIM
 {
@@ -23,18 +10,25 @@ namespace GuziecSIM
     /// </summary>
     public partial class MainWindow : Window
     {
+        private NotifyIcon notifyIcon = null;
+
         public MainWindow()
         {
             InitializeComponent();
+            notifyIcon = new NotifyIcon();
+            notifyIcon.Icon = new Icon(@"../../ikona.ico");
+            notifyIcon.Visible = true;
+            System.Windows.Application.Current.Resources["notifyIcon"] = notifyIcon;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if(Logowanie._login != null)
             {
-                baza_danych_azure.baza_danych.rozglos_logowanie();
-                baza_danych_azure.baza_danych.usunAdresIP(Logowanie._login);
+                api_baza_danych.baza_danych.ustaw_status(Logowanie._login, false);
+                api_baza_danych.baza_danych.rozglos_logowanie();
             }
+            notifyIcon.Visible = false;
         }
     }
 }

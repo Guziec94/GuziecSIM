@@ -4,9 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
 using klasa_zabezpieczen;
-using baza_danych_azure;
-using System.Collections.Generic;
-using System.Net;
+using api_baza_danych;
 
 namespace GuziecSIM
 {
@@ -44,35 +42,38 @@ namespace GuziecSIM
         /* [WYKRYTO WPROWADZANIE ZMIAN W POLU LOGINU] */
         private void textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            _login = textBox.Text;
             textBox.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)230, (byte)230, (byte)230));
         }
 
         /* [ZAPOCZĄTKOWANIE PRÓBY LOGOWANIA] */
-        private void button1_Click(object sender, RoutedEventArgs e)
+        private async void button1_Click(object sender, RoutedEventArgs e)
         {
+            _login = textBox.Text;
             if (!string.IsNullOrEmpty(_login))
             {
                 if (!string.IsNullOrEmpty(_klucz.klucz_prywatny))
                 {
+                    button1.IsEnabled = false;
                     if (baza_danych.sprawdz_dane(_login, _klucz))
                     {
-                        bool czy_zalogowany = baza_danych.czy_zalogowany();
+                        bool czy_zalogowany = await baza_danych.czy_zalogowany();
                         if (czy_zalogowany == false)
                         {
-                            baza_danych.wprowadzAdresIP(_login);
+                            baza_danych.ustaw_status(_login, true);//zmiana statusu uzytkownika na zalogowany
                             cos = new PanelGlowny();
                             NavigationService nav = NavigationService.GetNavigationService(this);
                             nav.Navigate(cos);
                         }
                         else
                         {
-                            MessageBox.Show("Użytkownik jest już zalogowany w systemie.");
+                            klasa_rozszerzen.balloon_tip("", "Użytkownik jest już zalogowany w systemie.");
+                            button1.IsEnabled = true;
                         }
                     }
                     else
                     {
-                        MessageBox.Show("Błąd logowania. Sprawdź dane!");
+                        klasa_rozszerzen.balloon_tip("", "Błąd logowania. Sprawdź dane!");
+                        button1.IsEnabled = true;
                     }
                 }
                 else button.BorderBrush = new SolidColorBrush(Color.FromArgb(255, (byte)242, (byte)202, (byte)202));

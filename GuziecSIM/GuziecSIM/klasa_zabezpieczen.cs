@@ -50,7 +50,7 @@ namespace klasa_zabezpieczen
             }
             catch(Exception)
             {
-                MessageBox.Show("Nie udało się załadować pliku z kluczem.");
+                klasa_rozszerzen.balloon_tip("", "Nie udało się załadować pliku z kluczem.");
             }
         }
 
@@ -76,6 +76,16 @@ namespace klasa_zabezpieczen
     {
         public static UTF8Encoding _encoder = new UTF8Encoding();
 
+        public static void balloon_tip(string tytul, string tresc)
+        {
+            if(tytul=="")
+            {
+                tytul = "GuziecSIM";
+            }
+            var notify = (System.Windows.Forms.NotifyIcon)System.Windows.Application.Current.Resources["notifyIcon"];
+            notify.ShowBalloonTip(1000, tytul, tresc, System.Windows.Forms.ToolTipIcon.Info);
+        }
+
         public static string hashuj(this string dane)//"tekst do zahashowania".hashuj();
         {
             MD5 md5Hash = MD5.Create();
@@ -92,19 +102,40 @@ namespace klasa_zabezpieczen
         public static string deszyfruj(this string dane, string klucz_prywatny)//"tekst do zdeszyfrowania".deszyfruj(klucz_publiczny);
         {
             var rsa = new RSACryptoServiceProvider();
+            string wyjscie = "";
             byte[] daneBajtowo = Encoding.Default.GetBytes(dane);//praca na ascii
             rsa.FromXmlString(klucz_prywatny);
-            var odszyfrowaneBajty = rsa.Decrypt(daneBajtowo, false);
-            return _encoder.GetString(odszyfrowaneBajty);
+            for (int i=0;i<Math.Ceiling((double)dane.Length/64);i++)
+            {
+                byte[] temp_daneBajtowo = daneBajtowo.Skip(i * 64).Take(64).ToArray();
+                var odszyfrowaneBajty = rsa.Decrypt(temp_daneBajtowo, false);
+                wyjscie += _encoder.GetString(odszyfrowaneBajty);
+            }
+            return wyjscie;
         }
 
         public static string szyfruj(this string dane, string klucz_publiczny)//"tekst do zaszyfrowania".szyfruj(klucz_publiczny);
         {
             var rsa = new RSACryptoServiceProvider();
             rsa.FromXmlString(klucz_publiczny);
-            var dataToEncrypt = _encoder.GetBytes(dane);
-            var encryptedByteArray = rsa.Encrypt(dataToEncrypt, false).ToArray();
-            return Encoding.Default.GetString(encryptedByteArray);//praca na ascii
+            string wyjscie = "";
+            for(int i=0;i<Math.Ceiling((double)dane.Length/50);i++)
+            {
+                string temp_dane;
+                if(i*50+50>dane.Length)
+                {
+                    temp_dane = dane.Substring(i * 50, dane.Length-i*50);
+                }
+                else
+                {
+                    temp_dane = dane.Substring(i * 50, 50);
+                }
+                var dataToEncrypt = _encoder.GetBytes(temp_dane);
+                var encryptedByte= rsa.Encrypt(dataToEncrypt, false);
+                var encryptedByteArray = encryptedByte.ToArray();
+                wyjscie += Encoding.Default.GetString(encryptedByteArray);//praca na ascii
+            }
+            return wyjscie;
         }
     }
 }

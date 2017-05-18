@@ -8,8 +8,9 @@ using System.Xml;
 using System.Linq;
 using System.Xml.Linq;
 using System.Data;
+using System.Threading.Tasks;
 
-namespace baza_danych_azure
+namespace api_baza_danych
 {
     public class baza_danych
     {
@@ -26,19 +27,7 @@ namespace baza_danych_azure
             }
             catch (Exception)
             {
-                MessageBox.Show("Nie można nawiązać połączenia!");
-            }
-        }
-
-        public static void rozlacz_z_baza()
-        {
-            try
-            {
-                cnn.Close();
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Nie udało się rozłączyć.");
+                klasa_rozszerzen.balloon_tip("", "Nie można nawiązać połączenia!");
             }
         }
 
@@ -52,11 +41,11 @@ namespace baza_danych_azure
             _sqlCommand.Parameters.AddWithValue("login", Logowanie._login);
             _sqlCommand.Notification = null;
             dependency = new SqlDependency(_sqlCommand);
-            dependency.OnChange += SqlDependencyOnChange;
+            dependency.OnChange += broker_wykryl_zmiane;
             await _sqlCommand.ExecuteReaderAsync();
         }
 
-        private static void SqlDependencyOnChange(object sender, SqlNotificationEventArgs eventArgs)
+        private static void broker_wykryl_zmiane(object sender, SqlNotificationEventArgs eventArgs)
         {
             if (eventArgs.Info == SqlNotificationInfo.Invalid)
             {
@@ -143,34 +132,37 @@ namespace baza_danych_azure
             }
         }
 
-        public static bool czy_zalogowany()
+        public async static Task<bool> czy_zalogowany()
         {
-            bool wynik = true;
-            string query = "update lista_zdarzen set sprawdz_logowanie=1 where login = @login";//ustawienie eventu
-            SqlCommand updateQuery = new SqlCommand(query, cnn);
-            updateQuery.Parameters.AddWithValue("login", Logowanie._login);
-            updateQuery.ExecuteNonQuery();
-            System.Threading.Thread.Sleep(2000);
-            query = "select sprawdz_logowanie from lista_zdarzen where login = @login";//ustawienie eventu
-            SqlCommand executeQuery = new SqlCommand(query, cnn);
-            executeQuery.Parameters.AddWithValue("login", Logowanie._login);
-            using (executeQuery)
+            bool czy_dostepny = true;
+            string select_query = "select czy_zalogowany from uzytkownicy where login = @login";
+            SqlCommand selectQuery = new SqlCommand(select_query, cnn);
+            selectQuery.Parameters.AddWithValue("login", Logowanie._login);
+            czy_dostepny = (bool)selectQuery.ExecuteScalar();
+            if (czy_dostepny == false)
             {
-                using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
-                {
-                    if (readerQuery.Read())
-                    {
-                        wynik = readerQuery.GetSqlBoolean(0) == true ? true : false;
-                        readerQuery.Close();
-                    }
-                }
+                return false;//status w bazie danych był ustawiony na niedostępny - wszystko prawidłowo
             }
-            return !wynik;
+            else
+            {
+                bool wynik = true;
+                string query = "update lista_zdarzen set sprawdz_logowanie=1 where login = @login";//ustawienie eventu
+                SqlCommand updateQuery = new SqlCommand(query, cnn);
+                updateQuery.Parameters.AddWithValue("login", Logowanie._login);
+                updateQuery.ExecuteNonQuery();
+                //System.Threading.Thread.Sleep(2000);
+                await Task.Delay(2000);//czekamy 2 sekundy na zmianę - jeśli ktoś jest zalogowany do aplikacji to zdąży zresetować event
+                query = "select sprawdz_logowanie from lista_zdarzen where login = @login";//odczytanie eventu
+                SqlCommand executeQuery = new SqlCommand(query, cnn);
+                executeQuery.Parameters.AddWithValue("login", Logowanie._login);
+                wynik = (bool)executeQuery.ExecuteScalar();//zmienna wynik daje nam prawdziwy status uzytkownika, ktory moze byc inny niz ten przechowywany w bazie danych (np. po zerwanym połączeniu lub wyłączeniu aplikacji na skutek błędu)
+                return !wynik;//status w bazie danych był ustawiony na dostepny, a zmienna wynik przechowuje informację czy użytkownik nadal jest poprawnie zalogowany
+            }
         }
 
         public static void broker_stop()
         {
-            dependency.OnChange -= SqlDependencyOnChange;
+            dependency.OnChange -= broker_wykryl_zmiane;
             dependency = null;
         }
 
@@ -181,32 +173,22 @@ namespace baza_danych_azure
             string query = "select skrot_klucz_prywatny from uzytkownicy where login = @login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
-            using (executeQuery)
+            try
             {
-                try
+                queryResult = (string)executeQuery.ExecuteScalar();
+                if (!hashKlucza.Equals(queryResult))
                 {
-                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
-                    {
-                        if (readerQuery.Read())
-                        {
-                            queryResult = readerQuery.GetString(0);
-                            readerQuery.Close();
-                        }
-                    }
-                    if (!hashKlucza.Equals(queryResult))
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.\n" + ex.Message);
                     return false;
                 }
+                else
+                {
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd! Spróbuj ponownie.\n" + ex.Message);
+                return false;
             }
         }
 
@@ -224,22 +206,22 @@ namespace baza_danych_azure
             try
             {
                 executeQuery.ExecuteNonQuery();
-                MessageBox.Show("Zapisz plik przechowujący klucz w bezpiecznym miejscu. Będziesz używać go do logowania.");
+                klasa_rozszerzen.balloon_tip("", "Zapisz plik przechowujący klucz w bezpiecznym miejscu. Będziesz używać go do logowania.");
                 if (nowy_klucz.zapisz_do_pliku(login) == false)
                 {
                     usun_konto(login, nowy_klucz);
-                    MessageBox.Show("Konto nie zostało utworzone (nie zapisano klucza).");
+                    klasa_rozszerzen.balloon_tip("", "Konto nie zostało utworzone (nie zapisano klucza).");
                     return false;
                 }
                 else
                 {
-                    MessageBox.Show("Konto zostało utworzone poprawnie. Możesz teraz się zalogować.");
+                    klasa_rozszerzen.balloon_tip("", "Konto zostało utworzone poprawnie. Możesz teraz się zalogować.");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Wystąpił nieoczekiwany błąd! Użytkownik nie został utworzony, spróbuj ponownie." + ex.Message);
+                klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd! Użytkownik nie został utworzony, spróbuj ponownie." + ex.Message);
                 return false;
             }
         }
@@ -254,12 +236,12 @@ namespace baza_danych_azure
                     SqlCommand executeQuery = new SqlCommand(query, cnn);
                     executeQuery.Parameters.AddWithValue("login", login);
                     executeQuery.ExecuteNonQuery();
-                    usunAdresIP(login);
+                    ustaw_status(login, false);
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie.\n" + ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd! Spróbuj ponownie.\n" + ex.Message);
                     return false;
                 }
             }
@@ -271,40 +253,28 @@ namespace baza_danych_azure
 
         public static bool czyLoginIstnieje(string login)
         {
-            string queryResult = null;
-            string query = "select login from uzytkownicy where login = @login";
+            string query = "select count(*) from uzytkownicy where login = @login";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
-            using (executeQuery)
+            try
             {
-                try
+                if((int)executeQuery.ExecuteScalar() > 0)
                 {
-                    using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
-                    {
-                        if (readerQuery.Read())
-                        {
-                            queryResult = readerQuery.GetString(0);
-                            readerQuery.Close();
-                        }
-                        if (queryResult != null)
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n" + ex.Message);
                     return true;
                 }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" + ex.Message);
+                return true;
             }
         }
 
-        public static List<Wiadomosc> sprawdzKrotkieWiadomosci(string login, klucze klucz_odbierajacego)
+        public static List<Wiadomosc> sprawdzWiadomosci(string login, klucze klucz_odbierajacego)
         {
             List<Wiadomosc> wiadomosci = new List<Wiadomosc>();
             string query = "select login_wysylajacego, tresc, czas_wyslania from wiadomosci where login_odbiorcy = @login";
@@ -334,13 +304,13 @@ namespace baza_danych_azure
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n" + ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" + ex.Message);
                     return null;
                 }
             }
         }
 
-        public static void usunKrotkieWiadomosci(string login)
+        public static void usunWiadomosci(string login)
         {
             try
             {
@@ -351,16 +321,13 @@ namespace baza_danych_azure
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Wystąpił nieoczekiwany błąd! Spróbuj ponownie." + ex.Message);
+                klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd! Spróbuj ponownie." + ex.Message);
             }
         }
 
-        public static void wyslij_krotka_wiadomosc(string login_wysylajacego, string login_odbiorcy, string klucz_publiczny, string tresc, DateTime? termin_waznosci)
+        public static void wyslij_wiadomosc(string login_wysylajacego, string login_odbiorcy, string klucz_publiczny, string tresc)
         {
-            if (termin_waznosci == null)
-            {
-                termin_waznosci = DateTime.Now.AddDays(3);
-            }
+            DateTime termin_waznosci = DateTime.Now.AddDays(3);
             string query = "INSERT INTO wiadomosci (login_wysylajacego,login_odbiorcy,tresc,termin_waznosci,czas_wyslania) VALUES(@login_wysylajacego, @login_odbiorcy, @tresc, @termin_waznosci,@czas_wyslania);UPDATE lista_zdarzen SET nowa_wiadomosc = 1 WHERE login = @login_odbiorcy";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login_wysylajacego", login_wysylajacego);
@@ -371,19 +338,19 @@ namespace baza_danych_azure
             executeQuery.ExecuteNonQuery();
         }
 
-        public static void wprowadzAdresIP(string login)//ustawienie statusu na zalogowany
+        public static void ustaw_status(string login, bool czy_dostepny)//DO SPRAWDZENIA CZY NIE POWODUJE BŁĘDÓW PRZY NP. OCZEKUJĄCYCH KONTAKTACH (OGÓLNIE EVENTACH USTAWIONYCH GDY UŻYTKOWNIK BYŁ OFFLINE)
         {
-            string query = "UPDATE uzytkownicy set czy_zalogowany=1 where login = @login;update lista_zdarzen set nowa_wiadomosc = 0, nowy_oczekujacy = 0, przeladuj_kontakty = 0, sprawdz_logowanie = 0 where login = @login";//DO SPRAWDZENIA CZY NIE POWODUJE BŁĘDÓW PRZY NP. OCZEKUJĄCYCH KONTAKTACH (OGÓLNIE EVENTACH USTAWIONYCH GDY UŻYTKOWNIK BYŁ OFFLINE)
+            string query;
+            if (czy_dostepny)
+            {
+                query = "UPDATE uzytkownicy set czy_zalogowany=1 where login = @login";
+                //query = "UPDATE uzytkownicy set czy_zalogowany=1 where login = @login;update lista_zdarzen set nowa_wiadomosc = 0, nowy_oczekujacy = 0, przeladuj_kontakty = 0, sprawdz_logowanie = 0 where login = @login";
+            }
+            else
+            {
+                query = "UPDATE uzytkownicy set czy_zalogowany=0 where login = @login";
+            }
             SqlCommand executeQuery = new SqlCommand(query, cnn);
-            executeQuery.Parameters.AddWithValue("login", login);
-            executeQuery.ExecuteNonQuery();
-        }
-
-        public static void usunAdresIP(string login)//ustawienie statusu na wylogowany
-        {
-            string query = "UPDATE uzytkownicy set czy_zalogowany=0 where login = @login";
-            SqlCommand executeQuery = new SqlCommand(query, cnn);
-            executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
             executeQuery.ExecuteNonQuery();
         }
@@ -434,7 +401,7 @@ namespace baza_danych_azure
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n"+ex);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" +ex);
                     return null;
                 }
             }
@@ -463,7 +430,6 @@ namespace baza_danych_azure
         {
             string query = "INSERT INTO oczekujacy_znajomi VALUES(@loginDodajacego,@loginDodawanego,1); UPDATE lista_zdarzen SET nowy_oczekujacy = 1 WHERE login = @loginDodawanego";
             SqlCommand executeQuery = new SqlCommand(query, cnn);
-            executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
             executeQuery.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
             executeQuery.ExecuteNonQuery();
@@ -494,7 +460,7 @@ namespace baza_danych_azure
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n" + ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" + ex.Message);
                 }
             }
         }
@@ -508,7 +474,6 @@ namespace baza_danych_azure
                 {
                     query = "UPDATE oczekujacy_znajomi SET status = 3 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego;UPDATE lista_zdarzen SET nowy_oczekujacy = 1 WHERE login = @loginDodajacego";
                     SqlCommand executeQuery2 = new SqlCommand(query, cnn);
-                    executeQuery2 = new SqlCommand(query, cnn);
                     executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
                     executeQuery2.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
                     executeQuery2.ExecuteNonQuery();
@@ -518,7 +483,7 @@ namespace baza_danych_azure
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n"+ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" +ex.Message);
                 }
             }
             else
@@ -527,14 +492,13 @@ namespace baza_danych_azure
                 {
                     query = "UPDATE oczekujacy_znajomi SET status = 4 WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego;UPDATE lista_zdarzen SET nowy_oczekujacy = 1 WHERE login = @loginDodajacego";
                     SqlCommand executeQuery2 = new SqlCommand(query, cnn);
-                    executeQuery2 = new SqlCommand(query, cnn);
                     executeQuery2.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
                     executeQuery2.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
                     executeQuery2.ExecuteNonQuery();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n"+ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" +ex.Message);
                 }
             }
         }
@@ -566,7 +530,7 @@ namespace baza_danych_azure
                             executeQuery3.Parameters.AddWithValue("loginDodawanego", queryResult);
                             executeQuery3.ExecuteNonQuery();
                             Logowanie.cos.pokazListeKontaktow();
-                            MessageBox.Show(queryResult + " zaakceptował Twoją prośbę o dodanie do znajomych.");
+                            klasa_rozszerzen.balloon_tip("", queryResult + " zaakceptował Twoją prośbę o dodanie do znajomych.");
                         }
                         else if (queryResult != null && queryResult2 == 4)
                         {
@@ -576,13 +540,13 @@ namespace baza_danych_azure
                             executeQuery3.Parameters.AddWithValue("loginDodajacego", login);
                             executeQuery3.Parameters.AddWithValue("loginDodawanego", queryResult);
                             executeQuery3.ExecuteNonQuery();
-                            MessageBox.Show(queryResult + " odrzucił Twoją prośbę o dodanie do znajomych.");
+                            klasa_rozszerzen.balloon_tip("", queryResult + " odrzucił Twoją prośbę o dodanie do znajomych.");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n"+ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n"+ex.Message);
                 }
             }
         }
@@ -629,7 +593,7 @@ namespace baza_danych_azure
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Wystąpił nieoczekiwany błąd!\n"+ex.Message);
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" +ex.Message);
                 }
             }
         }
@@ -662,37 +626,25 @@ namespace baza_danych_azure
         {
             if (Logowanie.cos.lista != null)
             {
-                bool flaga = true;
-                string queryResult = null;
                 string query = "SELECT login_dodawanego FROM oczekujacy_znajomi WHERE login_dodajacego = @loginDodajacego AND login_dodawanego = @loginDodawanego";
                 SqlCommand executeQuery = new SqlCommand(query, cnn);
                 executeQuery.Parameters.AddWithValue("loginDodajacego", loginDodajacego);
                 executeQuery.Parameters.AddWithValue("loginDodawanego", loginDodawanego);
-                using (executeQuery)
+                try
                 {
-                    try
+                    string queryResult = (string)executeQuery.ExecuteScalar();
+                    if (queryResult != null)
                     {
-                        using (SqlDataReader readerQuery = executeQuery.ExecuteReader())
-                        {
-                            if (readerQuery.Read())
-                            {
-                                queryResult = readerQuery.GetString(0);
-                                readerQuery.Close();
-                            }
-                            if (queryResult != null)
-                            {
-                                flaga = false;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Wystąpił nieoczekiwany błąd!\n"+ex.Message);
                         return false;
                     }
                 }
+                catch (Exception ex)
+                {
+                    klasa_rozszerzen.balloon_tip("", "Wystąpił nieoczekiwany błąd!\n" + ex.Message);
+                    return false;
+                }
                 Uzytkownik sprawdz = Logowanie.cos.lista.Find(x => x.login == loginDodawanego);
-                if (sprawdz != null || flaga == false)
+                if (sprawdz != null)
                 {
                     return false;
                 }

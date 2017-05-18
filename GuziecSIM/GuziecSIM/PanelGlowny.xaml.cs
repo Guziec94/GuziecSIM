@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Navigation;
-using baza_danych_azure;
+using api_baza_danych;
 using klasa_zabezpieczen;
 using System.Windows.Media.Imaging;
 using System.Windows.Documents;
@@ -82,9 +82,12 @@ namespace GuziecSIM
             Application.Current.Dispatcher.Invoke((Action)delegate
             {
                 // POBIERAMY NOWYCH WIADOMOSCI ZWIAZANYCH Z ZALOGOWANYM UZYTKOWNIKIEM Z BAZY DANYCH
-                List<Wiadomosc> wiadomosci = baza_danych.sprawdzKrotkieWiadomosci(_login, _klucz);
+                List<Wiadomosc> wiadomosci = baza_danych.sprawdzWiadomosci(_login, _klucz);
                 if (wiadomosci != null)
                 {
+                    var ostatnia_wiadomosc = wiadomosci[wiadomosci.Count - 1];
+                    klasa_rozszerzen.balloon_tip("Uzytkownik "+ostatnia_wiadomosc.nadawca+" napisał", ostatnia_wiadomosc.Text);
+
                     foreach (Wiadomosc w in wiadomosci)
                     {
                         // KAZDA ZE WCZYTANYCH NOWYCH WIADOMOSCI DODAJEMY DO ARCHIWUM (LISTY ZDEFINIOWANEJ U GORY)
@@ -107,7 +110,7 @@ namespace GuziecSIM
                     }
 
                     // PO POBRANIU WIADOMOSCI Z BAZY DANYCH WYKONUJEMY OPERACJE USUWANIA ICH Z NIEJ
-                    baza_danych.usunKrotkieWiadomosci(_login);
+                    baza_danych.usunWiadomosci(_login);
                 }
             });
         }
@@ -435,7 +438,7 @@ namespace GuziecSIM
             }
 
             // WYSYLLAMY NOWA WIADOMOSC DO BAZY DANYCH
-            baza_danych.wyslij_krotka_wiadomosc(nowa.nadawca, nowa.odbiorca, lista.Find(x => x.login == nowa.odbiorca).kluczPub, nowa.Text, DateTime.Now.AddDays(3));
+            baza_danych.wyslij_wiadomosc(nowa.nadawca, nowa.odbiorca, lista.Find(x => x.login == nowa.odbiorca).kluczPub, nowa.Text);
 
             // NOWO WYSLANA WIADOMOSC JEST DODAWANA ROWNIEZ DO ARCHIWUM KONWERSACJI
             archiwum.Add(nowa);
@@ -538,8 +541,8 @@ namespace GuziecSIM
             Application.Current.MainWindow.Title = "GuziecSIM";
 
             // ZATRZYMUJEMY WYKONYWANE PRZEZ BAZE DANYCH
+            baza_danych.ustaw_status(_login, false);
             baza_danych.rozglos_logowanie();
-            baza_danych.usunAdresIP(_login);
             baza_danych.broker_stop();
 
             // PRZEKIEROWUJEMY UZYTKOWNIKA SPOWROTEM NA STORNE LOGOWANIA
@@ -588,7 +591,7 @@ namespace GuziecSIM
                     }
                     else
                     {
-                        MessageBox.Show("Podano nie poprawny klucz, konto nie zostało usunięte.");
+                        klasa_rozszerzen.balloon_tip("","Podano niepoprawny klucz, konto nie zostało usunięte.");
                     }
                 }
             }
@@ -607,17 +610,17 @@ namespace GuziecSIM
                     {
                         if (baza_danych.sprawdzListeKontaktow(_login, inputDialog.Znajomy))
                         {
-                            MessageBox.Show("Zaproszenie zostało wysłane.");
+                            klasa_rozszerzen.balloon_tip("","Zaproszenie zostało wysłane.");
                             baza_danych.dodajDoListyOczekujacych(_login, inputDialog.Znajomy);
                         }
                         else
                         {
-                            MessageBox.Show("Masz już użytkownika " + inputDialog.Znajomy + " na liscie kontaktów lub zaproszenie czeka na decyzje użytkownika!");
+                            klasa_rozszerzen.balloon_tip("", "Masz już użytkownika " + inputDialog.Znajomy + " na liscie kontaktów lub zaproszenie czeka na decyzje użytkownika!");
                         }
                     }
-                    else MessageBox.Show("Użytkownik o nazwie '" + inputDialog.Znajomy + "' nie istnieje");
+                    else klasa_rozszerzen.balloon_tip("", "Użytkownik o nazwie '" + inputDialog.Znajomy + "' nie istnieje");
                 }
-                else MessageBox.Show("Nie możesz dodawać samego siebie.");
+                else klasa_rozszerzen.balloon_tip("", "Nie możesz dodawać samego siebie.");
             }
         }
 
@@ -663,7 +666,7 @@ namespace GuziecSIM
                 textBox.Visibility = textBox.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
                 listaNaklejek.Visibility = listaNaklejek.Visibility == Visibility.Visible ? Visibility.Hidden : Visibility.Visible;
 
-                MessageBox.Show("Nie posiadasz żadnych naklejek.");
+                klasa_rozszerzen.balloon_tip("", "Nie posiadasz żadnych naklejek.");
             }
         }
 
