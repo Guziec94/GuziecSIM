@@ -598,7 +598,6 @@ namespace GuziecSIM
             // ZATRZYMUJEMY WYKONYWANE PRZEZ BAZE DANYCH
             baza_danych.ustaw_status(_login, false);
             baza_danych.rozglos_logowanie();
-            baza_danych.broker_stop();
 
             // PRZEKIEROWUJEMY UZYTKOWNIKA SPOWROTEM NA STORNE LOGOWANIA
             Logowanie logowanie = new Logowanie();

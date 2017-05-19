@@ -162,6 +162,7 @@ namespace api_baza_danych
 
         public static void broker_stop()
         {
+            SqlDependency.Stop(connectionString);
             dependency.OnChange -= broker_wykryl_zmiane;
             dependency = null;
         }
@@ -349,6 +350,7 @@ namespace api_baza_danych
             else
             {
                 query = "UPDATE uzytkownicy set czy_zalogowany=0 where login = @login";
+                broker_stop();
             }
             SqlCommand executeQuery = new SqlCommand(query, cnn);
             executeQuery.Parameters.AddWithValue("login", login);
